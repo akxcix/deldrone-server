@@ -1,0 +1,23 @@
+{{define "base"}}
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>{{template "title" .}} - DelDrone</title>
+    </head>
+    <body>
+        <header>
+            <h1><a href="/">DelDrone</a></h1>
+        </header>
+        <nav>
+            <div>
+                <a href="/">Home</a>
+            </div>
+        </nav>
+        <section>
+            {{template "body" .}}
+        </section>
+        <footer>Created by <a href="https://github.com/deldrone">CPG 81</a></footer>
+    </body>
+</html>
+{{end}}
