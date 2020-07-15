@@ -14,7 +14,8 @@ type application struct {
 
 func main() {
 	// command line flags
-	addr := flag.String("addr", ":4000", "HTTP Address")
+	addr := flag.String("addr", ":443", "HTTP Address")
+	tls := flag.Bool("tls", true, "Use TLS server")
 	flag.Parse()
 
 	// different loggers to seperate informative logs and error logs
@@ -35,7 +36,12 @@ func main() {
 	}
 
 	infoLog.Printf("Starting server on %s", *addr)
-	err := srv.ListenAndServeTLS("./tls/cert.pem", "./tls/key.pem") // TODO: Shift to HTTPS server
+	var err error
+	if *tls {
+		err = srv.ListenAndServeTLS("./tls/cert.pem", "./tls/key.pem")
+	} else {
+		err = srv.ListenAndServe()
+	}
 	log.Fatal(err)
 
 }

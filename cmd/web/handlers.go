@@ -26,3 +26,11 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
+func (app *application) signupForm(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("Displays form to sign up"))
+}
+
+func (app *application) loginForm(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("Displays form to log in"))
+}
