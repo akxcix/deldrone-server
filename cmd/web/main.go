@@ -15,7 +15,7 @@ type application struct {
 func main() {
 	// command line flags
 	addr := flag.String("addr", ":443", "HTTP Address")
-	tls := flag.Bool("tls", true, "Use TLS server")
+	tls := flag.Bool("tls", false, "Use TLS server")
 	flag.Parse()
 
 	// different loggers to seperate informative logs and error logs

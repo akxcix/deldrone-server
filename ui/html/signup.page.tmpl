@@ -1,0 +1,61 @@
+{{template "base" .}}
+
+{{define "title"}}Sign Up{{end}}
+
+{{define "body"}}
+    <form action="/signup" method="POST">
+        <div>
+            <div>
+                <label>Name: </label>
+                <input type="text" name="name">
+            </div>
+            <div>
+                <label>Email: </label>
+                <input type="email" name="email">
+            </div>
+            <div>
+                <label>Password:</label>
+                <input type="password" name="password">
+            </div>
+            <div>
+                <label>Phone: </label>
+                <input type="text" name="phone">
+            </div>
+            <div>
+                <label>Address: </label>
+                <input type="text" name="address">
+            </div>
+            <div>
+                <label>Pin Code: </label>
+                <input type="text" name="pincode">
+            </div>
+            <div>
+                <label>I am a:</label>
+                <input type="radio" name="accType" value="customer" checked> Customer
+                <input type="radio" name="accType" value="vendor"> Vendor
+            </div>
+        </div>
+        <div>
+            <div>
+                <p>
+                    This is the location where you would like the drone to pick up payload.
+                </p>
+                <h5>
+                    Note: This field is required only for vendors. Customers will be asked for 
+                    their location while confirming orders.
+                </h5>
+            </div>
+            <div>
+                <label>Latitude: </label>
+                <input type="text" name="gps_lat">
+            </div>
+            <div>
+                <label>Longitude: </label>
+                <input type="text" name="gps_long">
+            </div>
+        </div>
+        <div>
+            <input type="submit" value="Sign Up">
+        </div>
+    </form>
+{{end}}

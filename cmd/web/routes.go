@@ -13,6 +13,7 @@ func (app *application) routes() http.Handler {
 	r.HandleFunc("/", app.home).Methods("GET")
 	r.HandleFunc("/signup", app.signupForm).Methods("GET")
 	r.HandleFunc("/login", app.loginForm).Methods("GET")
+	r.HandleFunc("/login", app.login).Methods("POST")
 
 	fileServer := http.FileServer(http.Dir("./ui/static/"))
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static", fileServer)).Methods("GET") // static files
