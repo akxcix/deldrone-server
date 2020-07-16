@@ -17,5 +17,5 @@ func (app *application) routes() http.Handler {
 
 	fileServer := http.FileServer(http.Dir("./ui/static/"))
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static", fileServer)).Methods("GET") // static files
-	return r
+	return app.logRequest(r)
 }
