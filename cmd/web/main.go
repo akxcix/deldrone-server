@@ -3,16 +3,20 @@ package main
 import (
 	"database/sql"
 	"flag"
+	"html/template"
 	"log"
 	"net/http"
 	"os"
 
+	"github.com/deldrone/server/pkg/models/mysql"
 	_ "github.com/go-sql-driver/mysql"
 )
 
 type application struct {
-	errorLog *log.Logger
-	infoLog  *log.Logger
+	errorLog      *log.Logger
+	infoLog       *log.Logger
+	templateCache map[string]*template.Template
+	customers     *mysql.CustomerModel
 }
 
 func main() {
@@ -22,25 +26,29 @@ func main() {
 	dsn := flag.String("dsn", "web:pass@/deldrone?parseTime=true", "Database DSN")
 	flag.Parse()
 
+	// different loggers to seperate informative logs and error logs
+	errorLog := log.New(os.Stderr, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
+	infoLog := log.New(os.Stdout, "INFO: ", log.Ldate|log.Ltime)
+
 	// open connection to the database
-	db, err := sql.Open("mysql", *dsn)
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = db.Ping() // ping to check if connection is established
+	db, err := connectDB(*dsn)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
 
-	// different loggers to seperate informative logs and error logs
-	errorLog := log.New(os.Stderr, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
-	infoLog := log.New(os.Stdout, "INFO: ", log.Ldate|log.Ltime)
+	// template cache
+	templateCache, err := newTemplateCache("./ui/html/")
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// application dependencies
 	app := &application{
-		errorLog: errorLog,
-		infoLog:  infoLog,
+		errorLog:      errorLog,
+		infoLog:       infoLog,
+		templateCache: templateCache,
+		customers:     &mysql.CustomerModel{DB: db},
 	}
 
 	// server settings
@@ -58,4 +66,16 @@ func main() {
 	}
 	log.Fatal(err)
 
+}
+
+func connectDB(dsn string) (*sql.DB, error) {
+	db, err := sql.Open("mysql", dsn)
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = db.Ping() // ping to check if connection is established
+	if err != nil {
+		log.Fatal(err)
+	}
+	return db, err
 }

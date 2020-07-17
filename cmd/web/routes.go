@@ -12,6 +12,7 @@ func (app *application) routes() http.Handler {
 	r := mux.NewRouter()
 	r.HandleFunc("/", app.home).Methods("GET")
 	r.HandleFunc("/signup", app.signupForm).Methods("GET")
+	r.HandleFunc("/signup", app.signup).Methods("POST")
 	r.HandleFunc("/login", app.loginForm).Methods("GET")
 	r.HandleFunc("/login", app.login).Methods("POST")
 

@@ -5,29 +5,13 @@ import (
 	"html/template"
 	"net/http"
 
+	"github.com/deldrone/server/pkg/forms"
+
 	"golang.org/x/crypto/bcrypt"
 )
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
-	files := []string{
-		"./ui/html/home.page.tmpl",
-		"./ui/html/base.layout.tmpl",
-	}
-
-	ts, err := template.ParseFiles(files...)
-	if err != nil {
-		app.errorLog.Printf(err.Error())
-		http.Error(w, "Internal Server Error", 500)
-		return
-	}
-
-	err = ts.Execute(w, nil)
-
-	if err != nil {
-		app.errorLog.Printf(err.Error())
-		http.Error(w, "Internal Server Error", 500)
-		return
-	}
+	app.render(w, r, "home.page.tmpl")
 }
 
 func (app *application) signupForm(w http.ResponseWriter, r *http.Request) {
@@ -49,6 +33,28 @@ func (app *application) signupForm(w http.ResponseWriter, r *http.Request) {
 		app.errorLog.Printf(err.Error())
 		http.Error(w, "Internal Server Error", 500)
 		return
+	}
+}
+
+func (app *application) signup(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseForm()
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+	}
+
+	form := forms.New(r.PostForm)
+	form.Required("name", "email", "password", "phone", "address", "pincode")
+	form.MinLength("password", 8)
+	form.MatchesPattern("email", forms.RxEmail)
+	if form.Get("accType") == "vendor" {
+		form.Required("gps_lat", "gps_long")
+		if !form.Valid() {
+			app.clientError(w, http.StatusBadRequest)
+			return
+		}
+		w.Write([]byte("Vendor SignUp"))
+	} else {
+		w.Write([]byte("Customer signup"))
 	}
 }
 
