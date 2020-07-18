@@ -18,6 +18,9 @@
             </div>
         </nav>
         <section>
+            {{with .Flash}}
+                <div class="flash">{{.}}</div>
+            {{end}}
             {{template "body" .}}
         </section>
         <footer>Created by <a href="https://github.com/deldrone">CPG 81</a></footer>

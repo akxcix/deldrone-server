@@ -20,7 +20,11 @@ func (app *application) signupForm(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) signup(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseForm()
+	session, err := app.sessionStore.Get(r, "session-name")
+	if err != nil {
+		app.serverError(w, err)
+	}
+	err = r.ParseForm()
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
 	}
@@ -93,7 +97,12 @@ func (app *application) signup(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	w.Write([]byte("signup succesful"))
+	session.AddFlash("Sign Up succesful")
+	err = session.Save(r, w)
+	if err != nil {
+		app.serverError(w, err)
+	}
+	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
 
 func (app *application) loginForm(w http.ResponseWriter, r *http.Request) {

@@ -10,12 +10,14 @@ import (
 
 	"github.com/deldrone/server/pkg/models/mysql"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/gorilla/sessions"
 )
 
 type application struct {
 	errorLog      *log.Logger
 	infoLog       *log.Logger
 	templateCache map[string]*template.Template
+	sessionStore  *sessions.CookieStore
 	customers     *mysql.CustomerModel
 	vendors       *mysql.VendorModel
 }
@@ -25,11 +27,15 @@ func main() {
 	addr := flag.String("addr", ":443", "HTTP Address")
 	tls := flag.Bool("tls", false, "Use TLS server")
 	dsn := flag.String("dsn", "web:pass@/deldrone?parseTime=true", "Database DSN")
+	secret := flag.String("secret", "supersecretkey", "Secret for sessions")
 	flag.Parse()
 
 	// different loggers to seperate informative logs and error logs
 	errorLog := log.New(os.Stderr, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
 	infoLog := log.New(os.Stdout, "INFO: ", log.Ldate|log.Ltime)
+
+	// sessions
+	store := sessions.NewCookieStore([]byte(*secret))
 
 	// open connection to the database
 	db, err := connectDB(*dsn)
@@ -49,6 +55,7 @@ func main() {
 		errorLog:      errorLog,
 		infoLog:       infoLog,
 		templateCache: templateCache,
+		sessionStore:  store,
 		customers:     &mysql.CustomerModel{DB: db},
 		vendors:       &mysql.VendorModel{DB: db},
 	}
