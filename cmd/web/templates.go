@@ -3,7 +3,13 @@ package main
 import (
 	"html/template"
 	"path/filepath"
+
+	"github.com/deldrone/server/pkg/forms"
 )
+
+type templateData struct {
+	Form *forms.Form
+}
 
 func newTemplateCache(dir string) (map[string]*template.Template, error) {
 	cache := map[string]*template.Template{}

@@ -4,6 +4,8 @@ import (
 	"database/sql"
 
 	"github.com/deldrone/server/pkg/models"
+	"github.com/go-sql-driver/mysql"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // CustomerModel wraps a connection pool
@@ -12,8 +14,25 @@ type CustomerModel struct {
 }
 
 // Insert creates a new user by inserting values into the database. Returns an error
-func (m *CustomerModel) Insert(name, address, pincode, email, password string, phone int) error {
-	return nil
+func (m *CustomerModel) Insert(name, address, email, password, phone string, pincode int) error {
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), 12)
+	if err != nil {
+		return err
+	}
+
+	stmt := `INSERT INTO customers (cust_name, cust_address, cust_pincode, cust_email, cust_hash_pwd, cust_phone)
+	VALUES(?, ?, ?, ?, ?, ?)`
+
+	_, err = m.DB.Exec(stmt, name, address, pincode, email, hashedPassword, phone)
+	if err != nil {
+		if mysqlErr, ok := err.(*mysql.MySQLError); ok {
+			if mysqlErr.Number == 1062 {
+				return models.ErrDuplicateEmail
+			}
+		}
+	}
+
+	return err
 }
 
 // Authenticate verifies the credentials and returns userid if valid details are provided.

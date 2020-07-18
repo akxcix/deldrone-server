@@ -2,38 +2,22 @@ package main
 
 import (
 	"fmt"
-	"html/template"
 	"net/http"
+	"strconv"
 
 	"github.com/deldrone/server/pkg/forms"
-
+	"github.com/deldrone/server/pkg/models"
 	"golang.org/x/crypto/bcrypt"
 )
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
-	app.render(w, r, "home.page.tmpl")
+	app.render(w, r, "home.page.tmpl", nil)
 }
 
 func (app *application) signupForm(w http.ResponseWriter, r *http.Request) {
-	files := []string{
-		"./ui/html/signup.page.tmpl",
-		"./ui/html/base.layout.tmpl",
-	}
-
-	ts, err := template.ParseFiles(files...)
-	if err != nil {
-		app.errorLog.Printf(err.Error())
-		http.Error(w, "Internal Server Error", 500)
-		return
-	}
-
-	err = ts.Execute(w, nil)
-
-	if err != nil {
-		app.errorLog.Printf(err.Error())
-		http.Error(w, "Internal Server Error", 500)
-		return
-	}
+	app.render(w, r, "signup.page.tmpl", &templateData{
+		Form: forms.New(nil),
+	})
 }
 
 func (app *application) signup(w http.ResponseWriter, r *http.Request) {
@@ -42,42 +26,50 @@ func (app *application) signup(w http.ResponseWriter, r *http.Request) {
 		app.clientError(w, http.StatusBadRequest)
 	}
 
+	// validation checks
 	form := forms.New(r.PostForm)
 	form.Required("name", "email", "password", "phone", "address", "pincode")
 	form.MinLength("password", 8)
 	form.MatchesPattern("email", forms.RxEmail)
+	pincodeInt, err := strconv.Atoi(form.Get("pincode"))
+	if err != nil {
+		form.Errors.Add("pincode", "enter valid pincode")
+	}
+
 	if form.Get("accType") == "vendor" {
 		form.Required("gps_lat", "gps_long")
 		if !form.Valid() {
-			app.clientError(w, http.StatusBadRequest)
+			app.render(w, r, "signup.page.tmpl", &templateData{Form: form})
 			return
 		}
 		w.Write([]byte("Vendor SignUp"))
 	} else {
-		w.Write([]byte("Customer signup"))
+		if !form.Valid() {
+			app.render(w, r, "signup.page.tmpl", &templateData{Form: form})
+			return
+		}
+		err = app.customers.Insert(
+			form.Get("name"),
+			form.Get("address"),
+			form.Get("email"),
+			form.Get("password"),
+			form.Get("phone"),
+			pincodeInt,
+		)
+		if err == models.ErrDuplicateEmail {
+			form.Errors.Add("email", "Address already in use")
+			app.render(w, r, "signup.page.tmpl", &templateData{Form: form})
+			return
+		} else if err != nil {
+			app.serverError(w, err)
+			return
+		}
 	}
+	w.Write([]byte("signup succesful"))
 }
 
 func (app *application) loginForm(w http.ResponseWriter, r *http.Request) {
-	files := []string{
-		"./ui/html/login.page.tmpl",
-		"./ui/html/base.layout.tmpl",
-	}
-
-	ts, err := template.ParseFiles(files...)
-	if err != nil {
-		app.errorLog.Printf(err.Error())
-		http.Error(w, "Internal Server Error", 500)
-		return
-	}
-
-	err = ts.Execute(w, nil)
-
-	if err != nil {
-		app.errorLog.Printf(err.Error())
-		http.Error(w, "Internal Server Error", 500)
-		return
-	}
+	app.render(w, r, "login.page.tmpl", nil)
 }
 
 func (app *application) login(w http.ResponseWriter, r *http.Request) {

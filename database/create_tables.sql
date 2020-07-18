@@ -3,7 +3,7 @@ create table customers(
     cust_name varchar(100) NOT NULL,
     cust_address varchar(500) NOT NULL,
     cust_pincode INTEGER NOT NULL,
-    cust_phone INTEGER NOT NULL,
+    cust_phone varchar(15) NOT NULL,
     cust_email varchar(100) NOT NULL UNIQUE,
     cust_hash_pwd char(60) NOT NULL,
     primary key(cust_id)
@@ -18,7 +18,7 @@ create table vendors(
     vendor_email varchar(100) NOT NULL UNIQUE,
     vendor_pwd char(60) NOT NULL,
     vendor_address varchar(100) NOT NULL,
-    vendor_phone INTEGER NOT NULL,
+    vendor_phone varchar(15) NOT NULL,
     primary key(vendor_id)
 );
 

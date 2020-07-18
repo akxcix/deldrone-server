@@ -4,30 +4,49 @@
 
 {{define "body"}}
     <form action="/signup" method="POST">
+    {{with .Form}}
         <div>
             <div>
                 <label>Name: </label>
-                <input type="text" name="name">
+                {{with .Errors.Get "name"}}
+                    <label class="error">{{.}}</label>
+                {{end}}
+                <input type="text" name="name" value="{{.Get "title"}}">
             </div>
             <div>
                 <label>Email: </label>
-                <input type="email" name="email">
+                {{with .Errors.Get "email"}}
+                    <label class="error">{{.}}</label>
+                {{end}}
+                <input type="email" name="email" value="{{.Get "email"}}">
             </div>
             <div>
                 <label>Password:</label>
+                {{with .Errors.Get "password"}}
+                    <label class="error">{{.}}</label>
+                {{end}}
                 <input type="password" name="password">
             </div>
             <div>
                 <label>Phone: </label>
-                <input type="text" name="phone">
+                {{with .Errors.Get "phone"}}
+                    <label class="error">{{.}}</label>
+                {{end}}
+                <input type="text" name="phone" value="{{.Get "phone"}}">
             </div>
             <div>
                 <label>Address: </label>
-                <input type="text" name="address">
+                {{with .Errors.Get "address"}}
+                    <label class="error">{{.}}</label>
+                {{end}}
+                <input type="text" name="address" value="{{.Get "address"}}">
             </div>
             <div>
                 <label>Pin Code: </label>
-                <input type="text" name="pincode">
+                {{with .Errors.Get "pincode"}}
+                    <label class="error">{{.}}</label>
+                {{end}}
+                <input type="text" name="pincode" value="{{.Get "pincode"}}">
             </div>
             <div>
                 <label>I am a:</label>
@@ -47,15 +66,22 @@
             </div>
             <div>
                 <label>Latitude: </label>
-                <input type="text" name="gps_lat">
+                {{with .Errors.Get "gps_lat"}}
+                    <label class="error">{{.}}</label>
+                {{end}}
+                <input type="text" name="gps_lat" value="{{.Get "gps_lat"}}">
             </div>
             <div>
                 <label>Longitude: </label>
-                <input type="text" name="gps_long">
+                {{with .Errors.Get "gps_long"}}
+                    <label class="error">{{.}}</label>
+                {{end}}
+                <input type="text" name="gps_long" value="{{.Get "gps_long"}}">
             </div>
         </div>
         <div>
             <input type="submit" value="Sign Up">
         </div>
+    {{end}}
     </form>
 {{end}}

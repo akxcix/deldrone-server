@@ -18,8 +18,8 @@ type Customer struct {
 	ID             int
 	Name           string
 	Address        string
-	Pincode        string
-	Phone          int
+	Pincode        int
+	Phone          string
 	Email          string
 	HashedPassword []byte
 }
