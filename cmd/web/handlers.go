@@ -31,31 +31,60 @@ func (app *application) signup(w http.ResponseWriter, r *http.Request) {
 	form.Required("name", "email", "password", "phone", "address", "pincode")
 	form.MinLength("password", 8)
 	form.MatchesPattern("email", forms.RxEmail)
-	pincodeInt, err := strconv.Atoi(form.Get("pincode"))
+	pincode, err := strconv.Atoi(form.Get("pincode"))
 	if err != nil {
 		form.Errors.Add("pincode", "enter valid pincode")
 	}
 
 	if form.Get("accType") == "vendor" {
 		form.Required("gps_lat", "gps_long")
+		gpsLat, err := strconv.ParseFloat(form.Get("gps_lat"), 64)
+		if err != nil {
+			form.Errors.Add("gps_lat", "enter valid value")
+		}
+		gpsLong, err := strconv.ParseFloat(form.Get("gps_long"), 64)
+		if err != nil {
+			form.Errors.Add("gps_lat", "enter valid value")
+		}
 		if !form.Valid() {
 			app.render(w, r, "signup.page.tmpl", &templateData{Form: form})
 			return
 		}
-		w.Write([]byte("Vendor SignUp"))
+
+		err = app.vendors.Insert(
+			form.Get("name"),
+			form.Get("address"),
+			form.Get("email"),
+			form.Get("password"),
+			form.Get("phone"),
+			pincode,
+			gpsLat,
+			gpsLong,
+		)
+		if err == models.ErrDuplicateEmail {
+			form.Errors.Add("email", "Address already in use")
+			app.render(w, r, "signup.page.tmpl", &templateData{Form: form})
+			return
+		} else if err != nil {
+			app.serverError(w, err)
+			return
+		}
+
 	} else {
 		if !form.Valid() {
 			app.render(w, r, "signup.page.tmpl", &templateData{Form: form})
 			return
 		}
+
 		err = app.customers.Insert(
 			form.Get("name"),
 			form.Get("address"),
 			form.Get("email"),
 			form.Get("password"),
 			form.Get("phone"),
-			pincodeInt,
+			pincode,
 		)
+
 		if err == models.ErrDuplicateEmail {
 			form.Errors.Add("email", "Address already in use")
 			app.render(w, r, "signup.page.tmpl", &templateData{Form: form})

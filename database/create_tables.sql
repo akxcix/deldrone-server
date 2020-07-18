@@ -16,14 +16,14 @@ create table vendors(
     vendor_gps_lat decimal(12,8) NOT NULL,
     vendor_gps_long decimal(12,8) NOT NULL,
     vendor_email varchar(100) NOT NULL UNIQUE,
-    vendor_pwd char(60) NOT NULL,
+    vendor_hash_pwd char(60) NOT NULL,
     vendor_address varchar(100) NOT NULL,
     vendor_phone varchar(15) NOT NULL,
     primary key(vendor_id)
 );
 
 create table listings(
-    list_id INTEGER NOT NULL ,
+    list_id INTEGER NOT NULL auto_increment,
     vendor_id INTEGER NOT NULL,
     listing_price INTEGER NOT NULL,
     listing_desc varchar(500) NOT NULL,
