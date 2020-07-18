@@ -37,7 +37,24 @@ func (m *VendorModel) Insert(name, address, email, password, phone string, pinco
 
 // Authenticate verifies the credentials and returns userid if valid details are provided.
 func (m *VendorModel) Authenticate(email, password string) (int, error) {
-	return 0, nil
+	var id int
+	var hashedPassword []byte
+	stmt := `SELECT vendor_id, vendor_hash_pwd FROM vendors WHERE vendor_email = ?`
+	row := m.DB.QueryRow(stmt, email)
+	err := row.Scan(&id, &hashedPassword)
+	if err == sql.ErrNoRows {
+		return 0, models.ErrInvalidCredentials
+	} else if err != nil {
+		return 0, err
+	}
+	err = bcrypt.CompareHashAndPassword(hashedPassword, []byte(password))
+	if err == bcrypt.ErrMismatchedHashAndPassword {
+		return 0, models.ErrInvalidCredentials
+	} else if err != nil {
+		return 0, err
+	}
+
+	return id, nil
 }
 
 // Get fetches the details of the customer using its id

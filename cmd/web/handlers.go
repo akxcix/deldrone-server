@@ -7,7 +7,6 @@ import (
 
 	"github.com/deldrone/server/pkg/forms"
 	"github.com/deldrone/server/pkg/models"
-	"golang.org/x/crypto/bcrypt"
 )
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
@@ -98,31 +97,38 @@ func (app *application) signup(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) loginForm(w http.ResponseWriter, r *http.Request) {
-	app.render(w, r, "login.page.tmpl", nil)
+	app.render(w, r, "login.page.tmpl", &templateData{
+		Form: forms.New(nil),
+	})
 }
 
 func (app *application) login(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
-		http.Error(w, "Bad Request", http.StatusBadRequest)
+		app.clientError(w, http.StatusBadRequest)
 		return
 	}
-
-	email := r.PostForm.Get("email")
-	password := r.PostForm.Get("password")
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), 12)
-	accType := r.PostForm.Get("accType")
-	storedHash := []byte("$2a$12$wryhNqW9750Nd1ZWRZd4leov8.SbD/dUeD13KOhJZhC/86CQ1vSEq")
-
-	err = bcrypt.CompareHashAndPassword(storedHash, []byte(password))
-	same := "yes"
-	if err == bcrypt.ErrMismatchedHashAndPassword {
-		same = "no"
-	} else if err != nil {
-		same = err.Error()
+	form := forms.New(r.PostForm)
+	form.Required("email", "password")
+	form.MatchesPattern("email", forms.RxEmail)
+	if !form.Valid() {
+		app.render(w, r, "login.page.tmpl", &templateData{Form: form})
+		return
 	}
-
-	str := fmt.Sprintf("%s\n%s\n%s\n%s", email, hashedPassword, accType, same)
+	var id int
+	if form.Get("accType") == "customer" {
+		id, err = app.customers.Authenticate(form.Get("email"), form.Get("password"))
+	} else {
+		id, err = app.vendors.Authenticate(form.Get("email"), form.Get("password"))
+	}
+	if err == models.ErrInvalidCredentials {
+		form.Errors.Add("generic", "Email or Password Incorrect. Please verify you have selected correct account type")
+		app.render(w, r, "login.page.tmpl", &templateData{Form: form})
+		return
+	} else if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	str := fmt.Sprintf("Login Succesful. ID: %d", id)
 	w.Write([]byte(str))
-
 }

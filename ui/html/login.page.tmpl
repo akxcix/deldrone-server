@@ -4,9 +4,13 @@
 
 {{define "body"}}
     <form action="/login" method="POST">
+    {{with .Form}}
+        {{with .Errors.Get "generic"}}
+            <div class="error">{{.}}</div>
+        {{end}}
         <div>
-            <label>Email</label>
-            <input type="email" name="email">
+            <label>Email: </label>
+            <input type="email" name="email" value="{{.Get "email"}}">
         </div>
         <div>
             <label>Password</label>
@@ -20,5 +24,6 @@
         <div>
             <input type="submit" value="Login">
         </div>
+    {{end}}
     </form>
 {{end}}
