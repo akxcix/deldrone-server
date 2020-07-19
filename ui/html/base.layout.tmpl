@@ -24,10 +24,12 @@
             <div>
                 {{if .AuthenticatedCustomer}}
                 <form action="/logout" method="POST">
+                    <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
                     <button type="submit">Log Out</button>
                 </form>
                 {{else if .AuthenticatedVendor}}
                 <form action="/logout" method="POST">
+                    <input type='hidden' name='csrf_token' value='{{.CSRFToken}}'>
                     <button type="submit">Log Out</button>
                 </form>
                 {{else}}

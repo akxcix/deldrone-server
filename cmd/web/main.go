@@ -27,7 +27,8 @@ func main() {
 	addr := flag.String("addr", ":443", "HTTP Address")
 	tls := flag.Bool("tls", false, "Use TLS server")
 	dsn := flag.String("dsn", "web:pass@/deldrone?parseTime=true", "Database DSN")
-	secret := flag.String("secret", "super-secret-key", "Secret for sessions")
+	authkey := flag.String("authkey", "super-secret-key", "Authentication key for sessions")
+	encryptionkey := flag.String("encryptionkey", "super-secret-key", "Encryption key for sessions")
 	flag.Parse()
 
 	// different loggers to seperate informative logs and error logs
@@ -35,7 +36,17 @@ func main() {
 	infoLog := log.New(os.Stdout, "INFO: ", log.Ldate|log.Ltime)
 
 	// sessions
-	store := sessions.NewCookieStore([]byte(*secret))
+	store := sessions.NewCookieStore(
+		[]byte(*authkey),
+		[]byte(*encryptionkey),
+	)
+	store.Options = &sessions.Options{
+		Path:     "/",
+		MaxAge:   60 * 60 * 6, // 12 hours
+		HttpOnly: true,
+		SameSite: http.SameSiteStrictMode,
+		Secure:   true,
+	}
 
 	// open connection to the database
 	db, err := connectDB(*dsn)

@@ -8,6 +8,7 @@ import (
 )
 
 type templateData struct {
+	CSRFToken             string
 	AuthenticatedCustomer int
 	AuthenticatedVendor   int
 	Form                  *forms.Form

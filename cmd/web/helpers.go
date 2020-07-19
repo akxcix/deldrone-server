@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/http"
 	"runtime/debug"
+
+	"github.com/justinas/nosurf"
 )
 
 func (app *application) serverError(w http.ResponseWriter, err error) {
@@ -22,7 +24,7 @@ func (app *application) addDefaultData(td *templateData, w http.ResponseWriter, 
 	// get session
 	session, err := app.sessionStore.Get(r, "session-name")
 	if err != nil {
-		return nil, err
+		return nil, err // TODO: handle cookie error
 	}
 
 	if td == nil {
@@ -35,6 +37,7 @@ func (app *application) addDefaultData(td *templateData, w http.ResponseWriter, 
 		td.Flash = flashes[0].(string)
 	}
 
+	td.CSRFToken = nosurf.Token(r)
 	td.AuthenticatedCustomer = app.authenticatedCustomer(r)
 	td.AuthenticatedVendor = app.authenticatedVendor(r)
 
