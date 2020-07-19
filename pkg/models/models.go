@@ -36,3 +36,15 @@ type Vendor struct {
 	Address        string
 	Phone          int
 }
+
+// Listing is a model that interfaces with the listings table in the database
+type Listing struct {
+}
+
+// Delivery is a model that interfaces with the deliveries table in the database
+type Delivery struct {
+}
+
+// Order is a model that interfaces with the orders table in the database
+type Order struct {
+}

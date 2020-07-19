@@ -14,10 +14,26 @@
         </header>
         <nav>
             <div>
-                <a href="/">Home</a>
+                {{if .AuthenticatedCustomer}}
+                    <a href="/customer/home">Home</a>
+                {{end}}
+                {{if .AuthenticatedVendor}}
+                    <a href="/vendor/home">Home</a>
+                {{end}}
+            </div>
+            <div>
+                {{if .AuthenticatedCustomer}}
                 <form action="/logout" method="POST">
                     <button type="submit">Log Out</button>
                 </form>
+                {{else if .AuthenticatedVendor}}
+                <form action="/logout" method="POST">
+                    <button type="submit">Log Out</button>
+                </form>
+                {{else}}
+                    <a href="/login">Login</a>
+                    <a href="/signup">Sign Up</a>
+                {{end}}
             </div>
         </nav>
         <section>

@@ -19,17 +19,26 @@ func (app *application) clientError(w http.ResponseWriter, status int) {
 }
 
 func (app *application) addDefaultData(td *templateData, w http.ResponseWriter, r *http.Request) (*templateData, error) {
-	if td == nil {
-		td = &templateData{}
-	}
+	// get session
 	session, err := app.sessionStore.Get(r, "session-name")
 	if err != nil {
 		return nil, err
 	}
+
+	if td == nil {
+		td = &templateData{}
+	}
+
+	// add flash message
 	flashes := session.Flashes()
 	if len(flashes) > 0 {
 		td.Flash = flashes[0].(string)
 	}
+
+	td.AuthenticatedCustomer = app.authenticatedCustomer(r)
+	td.AuthenticatedVendor = app.authenticatedVendor(r)
+
+	// save session
 	err = session.Save(r, w)
 	if err != nil {
 		return nil, err
@@ -38,7 +47,9 @@ func (app *application) addDefaultData(td *templateData, w http.ResponseWriter, 
 	return td, nil
 }
 
+// renders the web page
 func (app *application) render(w http.ResponseWriter, r *http.Request, name string, td *templateData) {
+	// creates a template set
 	ts, ok := app.templateCache[name]
 	if !ok {
 		app.serverError(w, fmt.Errorf("Template not found: %s", name))
@@ -49,6 +60,7 @@ func (app *application) render(w http.ResponseWriter, r *http.Request, name stri
 	td, err := app.addDefaultData(td, w, r)
 	if err != nil {
 		app.serverError(w, err)
+		return
 	}
 	err = ts.Execute(buf, td)
 	if err != nil {
@@ -56,4 +68,28 @@ func (app *application) render(w http.ResponseWriter, r *http.Request, name stri
 		return
 	}
 	buf.WriteTo(w)
+}
+
+func (app *application) authenticatedVendor(r *http.Request) int {
+	session, err := app.sessionStore.Get(r, "session-name")
+	if err != nil {
+		app.errorLog.Println(err.Error())
+		return 0
+	}
+	if session.Values["vendorID"] == nil {
+		return 0
+	}
+	return session.Values["vendorID"].(int)
+}
+
+func (app *application) authenticatedCustomer(r *http.Request) int {
+	session, err := app.sessionStore.Get(r, "session-name")
+	if err != nil {
+		app.errorLog.Println(err.Error())
+		return 0
+	}
+	if session.Values["customerID"] == nil {
+		return 0
+	}
+	return session.Values["customerID"].(int)
 }

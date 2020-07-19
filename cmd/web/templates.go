@@ -8,8 +8,10 @@ import (
 )
 
 type templateData struct {
-	Form  *forms.Form
-	Flash string
+	AuthenticatedCustomer int
+	AuthenticatedVendor   int
+	Form                  *forms.Form
+	Flash                 string
 }
 
 func newTemplateCache(dir string) (map[string]*template.Template, error) {
