@@ -18,7 +18,7 @@ func (app *application) clientError(w http.ResponseWriter, status int) {
 	http.Error(w, http.StatusText(status), status)
 }
 
-func (app *application) addDefaultData(td *templateData, r *http.Request) (*templateData, error) {
+func (app *application) addDefaultData(td *templateData, w http.ResponseWriter, r *http.Request) (*templateData, error) {
 	if td == nil {
 		td = &templateData{}
 	}
@@ -29,6 +29,10 @@ func (app *application) addDefaultData(td *templateData, r *http.Request) (*temp
 	flashes := session.Flashes()
 	if len(flashes) > 0 {
 		td.Flash = flashes[0].(string)
+	}
+	err = session.Save(r, w)
+	if err != nil {
+		return nil, err
 	}
 
 	return td, nil
@@ -42,7 +46,7 @@ func (app *application) render(w http.ResponseWriter, r *http.Request, name stri
 	}
 
 	buf := new(bytes.Buffer)
-	td, err := app.addDefaultData(td, r)
+	td, err := app.addDefaultData(td, w, r)
 	if err != nil {
 		app.serverError(w, err)
 	}

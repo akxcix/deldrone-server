@@ -27,7 +27,7 @@ func main() {
 	addr := flag.String("addr", ":443", "HTTP Address")
 	tls := flag.Bool("tls", false, "Use TLS server")
 	dsn := flag.String("dsn", "web:pass@/deldrone?parseTime=true", "Database DSN")
-	secret := flag.String("secret", "supersecretkey", "Secret for sessions")
+	secret := flag.String("secret", "super-secret-key", "Secret for sessions")
 	flag.Parse()
 
 	// different loggers to seperate informative logs and error logs

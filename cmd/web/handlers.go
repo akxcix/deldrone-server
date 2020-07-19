@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -20,10 +19,12 @@ func (app *application) signupForm(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) signup(w http.ResponseWriter, r *http.Request) {
+	// get session
 	session, err := app.sessionStore.Get(r, "session-name")
 	if err != nil {
 		app.serverError(w, err)
 	}
+
 	err = r.ParseForm()
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
@@ -39,7 +40,10 @@ func (app *application) signup(w http.ResponseWriter, r *http.Request) {
 		form.Errors.Add("pincode", "enter valid pincode")
 	}
 
+	// check whether signup was as a vendor or a customer
 	if form.Get("accType") == "vendor" {
+
+		// additional GPS validations
 		form.Required("gps_lat", "gps_long")
 		gpsLat, err := strconv.ParseFloat(form.Get("gps_lat"), 64)
 		if err != nil {
@@ -54,6 +58,7 @@ func (app *application) signup(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		// insert into database
 		err = app.vendors.Insert(
 			form.Get("name"),
 			form.Get("address"),
@@ -64,6 +69,8 @@ func (app *application) signup(w http.ResponseWriter, r *http.Request) {
 			gpsLat,
 			gpsLong,
 		)
+
+		// return if duplicate email or some other error
 		if err == models.ErrDuplicateEmail {
 			form.Errors.Add("email", "Address already in use")
 			app.render(w, r, "signup.page.tmpl", &templateData{Form: form})
@@ -73,12 +80,15 @@ func (app *application) signup(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-	} else {
+	} else { // customer
+		// if validation checks didn't pass
 		if !form.Valid() {
+			// prompt user to fill form with correct data
 			app.render(w, r, "signup.page.tmpl", &templateData{Form: form})
 			return
 		}
 
+		// insert into database
 		err = app.customers.Insert(
 			form.Get("name"),
 			form.Get("address"),
@@ -88,6 +98,7 @@ func (app *application) signup(w http.ResponseWriter, r *http.Request) {
 			pincode,
 		)
 
+		// return if duplicate email or some other error
 		if err == models.ErrDuplicateEmail {
 			form.Errors.Add("email", "Address already in use")
 			app.render(w, r, "signup.page.tmpl", &templateData{Form: form})
@@ -97,6 +108,8 @@ func (app *application) signup(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+
+	// redirect after succesful signup
 	session.AddFlash("Sign Up succesful")
 	err = session.Save(r, w)
 	if err != nil {
@@ -112,7 +125,12 @@ func (app *application) loginForm(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) login(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseForm()
+	session, err := app.sessionStore.Get(r, "session-name")
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	err = r.ParseForm()
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
 		return
@@ -127,17 +145,83 @@ func (app *application) login(w http.ResponseWriter, r *http.Request) {
 	var id int
 	if form.Get("accType") == "customer" {
 		id, err = app.customers.Authenticate(form.Get("email"), form.Get("password"))
+		if err == models.ErrInvalidCredentials {
+			form.Errors.Add("generic", "Email or Password Incorrect. Please ensure you have selected correct account type")
+			app.render(w, r, "login.page.tmpl", &templateData{Form: form})
+			return
+		} else if err != nil {
+			app.serverError(w, err)
+			return
+		}
+		session.Values["customerID"] = id
+		err = session.Save(r, w)
+		if err != nil {
+			app.serverError(w, err)
+			return
+		}
+		http.Redirect(w, r, "/customer/home", http.StatusSeeOther)
 	} else {
 		id, err = app.vendors.Authenticate(form.Get("email"), form.Get("password"))
+		if err == models.ErrInvalidCredentials {
+			form.Errors.Add("generic", "Email or Password Incorrect. Please ensure you have selected correct account type")
+			app.render(w, r, "login.page.tmpl", &templateData{Form: form})
+			return
+		} else if err != nil {
+			app.serverError(w, err)
+			return
+		}
+		session.Values["vendorID"] = id
+		err = session.Save(r, w)
+		if err != nil {
+			app.serverError(w, err)
+			return
+		}
+		http.Redirect(w, r, "/vendor/home", http.StatusSeeOther)
 	}
-	if err == models.ErrInvalidCredentials {
-		form.Errors.Add("generic", "Email or Password Incorrect. Please verify you have selected correct account type")
-		app.render(w, r, "login.page.tmpl", &templateData{Form: form})
-		return
-	} else if err != nil {
+}
+
+func (app *application) logout(w http.ResponseWriter, r *http.Request) {
+	session, err := app.sessionStore.Get(r, "session-name")
+	if err != nil {
 		app.serverError(w, err)
 		return
 	}
-	str := fmt.Sprintf("Login Succesful. ID: %d", id)
-	w.Write([]byte(str))
+
+	if session.Values["customerID"] != nil {
+		session.Values["customerID"] = nil
+		session.AddFlash("customer logged out")
+		err = session.Save(r, w)
+		if err != nil {
+			app.serverError(w, err)
+			return
+		}
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+	}
+	if session.Values["vendorID"] != nil {
+		session.Values["vendorID"] = nil
+		session.AddFlash("vendor logged out")
+		err = session.Save(r, w)
+		if err != nil {
+			app.serverError(w, err)
+			return
+		}
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+	}
+}
+
+func (app *application) vendorHome(w http.ResponseWriter, r *http.Request) {
+	// session, err := app.sessionStore.Get(r, "session-name")
+	// if err != nil {
+	// 	app.serverError(w, err)
+	// 	return
+	// }
+	// vendorID := session.Values["vendorID"]
+	// str := fmt.Sprintf("Vendor Home.\nYout ID is : %d.\nDisplays pending orders.", vendorID)
+	// w.Write([]byte(str))
+	app.render(w, r, "vendorhome.page.tmpl", nil)
+
+}
+
+func (app *application) customerHome(w http.ResponseWriter, r *http.Request) {
+	app.render(w, r, "customerhome.page.tmpl", nil)
 }
