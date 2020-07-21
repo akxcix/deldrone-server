@@ -16,6 +16,8 @@ type templateData struct {
 	Flash                 string
 	Listing               *models.Listing
 	Listings              []*models.Listing
+	Vendor                *models.Vendor
+	Vendors               []*models.Vendor
 }
 
 func newTemplateCache(dir string) (map[string]*template.Template, error) {

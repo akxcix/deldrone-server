@@ -24,6 +24,7 @@ func (app *application) routes() http.Handler {
 	r.Handle("/listing/create", app.requireAuthenticatedVendor(http.HandlerFunc(app.listingCreateForm))).Methods("GET")
 	r.Handle("/listing/create", app.requireAuthenticatedVendor(http.HandlerFunc(app.listingCreate))).Methods("POST")
 	r.Handle("/vendor/orders", app.requireAuthenticatedVendor(http.HandlerFunc(app.vendorOrders))).Methods("GET")
+	r.Handle("/vendor/{vendorID}", app.requireAuthenticatedCustomer(http.HandlerFunc(app.vendorIDPage))).Methods("GET")
 	r.Handle("/logout", app.requireAuthenticatedUser(http.HandlerFunc(app.logout))).Methods("POST")
 
 	fileServer := http.FileServer(http.Dir("./ui/static/"))

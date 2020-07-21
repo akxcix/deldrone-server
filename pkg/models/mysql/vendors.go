@@ -57,7 +57,45 @@ func (m *VendorModel) Authenticate(email, password string) (int, error) {
 	return id, nil
 }
 
-// Get fetches the details of the customer using its id
-func (m *VendorModel) Get(id int) *models.Customer {
-	return nil
+// GetByPincode returns a slice of all vendors in a pincode within the specified range
+func (m *VendorModel) GetByPincode(pincode, pincodeRange int) ([]*models.Vendor, error) {
+	stmt := `SELECT vendor_id, vendor_name, vendor_pincode, vendor_gps_lat, vendor_gps_long, vendor_email, vendor_address, vendor_phone
+	FROM vendors
+	WHERE vendor_pincode > ?
+	AND vendor_pincode < ?`
+
+	rows, err := m.DB.Query(stmt, pincode-pincodeRange, pincode+pincodeRange)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	vendors := []*models.Vendor{}
+
+	for rows.Next() {
+		v := &models.Vendor{}
+		err = rows.Scan(&v.ID, &v.Name, &v.Pincode, &v.GpsLat, &v.GpsLong, &v.Email, &v.Address, &v.Phone)
+		if err != nil {
+			return nil, err
+		}
+		vendors = append(vendors, v)
+	}
+	return vendors, nil
+}
+
+// Get fetches the details of the vendor using its id
+func (m *VendorModel) Get(id int) (*models.Vendor, error) {
+	stmt := `SELECT vendor_id, vendor_name, vendor_pincode, vendor_gps_lat, vendor_gps_long, vendor_email, vendor_address, vendor_phone
+	FROM vendors
+	WHERE vendor_id = ?`
+
+	row := m.DB.QueryRow(stmt, id)
+	vendor := &models.Vendor{}
+	err := row.Scan(&vendor.ID, &vendor.Name, &vendor.Pincode, &vendor.GpsLat, &vendor.GpsLong, &vendor.Email, &vendor.Address, &vendor.Phone)
+	if err == sql.ErrNoRows {
+		return nil, models.ErrNoRecord
+	} else if err != nil {
+		return nil, err
+	}
+	return vendor, nil
 }

@@ -3,7 +3,27 @@
 {{define "title"}}Customer Home{{end}}
 
 {{define "body"}}
-    <p>
-        Shows all vendors within pincode +- 10.
-    </p>
+    {{if .Vendors}}
+        <table>
+            <tr>
+                <th>Name</th>
+                <th>Pin Code</th>
+                <th>Address</th>
+            </tr>
+            {{range .Vendors}}
+            <tr>
+                <td><a href="/vendor/{{.ID}}">{{.Name}}</a></td>
+                <td>{{.Pincode}}</td>
+                <td>{{.Address}}</td>
+            </tr>
+            {{end}}
+        </table>
+    {{else}}
+        <p>
+            Oops, there doesn't seem to be any vendor in your area....yet.
+        </p>
+        <p>
+            Check back in some time.
+        </p>
+    {{end}}
 {{end}}

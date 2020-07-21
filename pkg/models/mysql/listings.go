@@ -55,7 +55,7 @@ func (m *ListingModel) All(vendorID int) ([]*models.Listing, error) {
 func (m *ListingModel) Get(id int) (*models.Listing, error) {
 	stmt := `SELECT list_id, vendor_id, listing_price, listing_desc, listing_name
 	FROM listings
-	WHERE id = ?`
+	WHERE list_id = ?`
 
 	row := m.DB.QueryRow(stmt, id)
 	l := &models.Listing{}

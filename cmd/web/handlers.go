@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/gorilla/mux"
 	"github.com/iamadarshk/deldrone-server/pkg/forms"
 	"github.com/iamadarshk/deldrone-server/pkg/models"
 )
@@ -301,5 +302,44 @@ func (app *application) listingCreate(w http.ResponseWriter, r *http.Request) {
 // Customer ---------------------------------------------------------------------------------------
 
 func (app *application) customerHome(w http.ResponseWriter, r *http.Request) {
-	app.render(w, r, "customerhome.page.tmpl", nil)
+	session, err := app.sessionStore.Get(r, "session-name")
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	customerID := session.Values["customerID"].(int)
+	customer, err := app.customers.Get(customerID)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	vendors, err := app.vendors.GetByPincode(customer.Pincode, 5)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	app.render(w, r, "customerhome.page.tmpl", &templateData{Vendors: vendors})
+}
+
+func (app *application) vendorIDPage(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	vendorID, err := strconv.Atoi(vars["vendorID"])
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	vendor, err := app.vendors.Get(vendorID)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	listings, err := app.listings.All(vendorID)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	app.render(w, r, "vendorid.page.tmpl", &templateData{
+		Vendor:   vendor,
+		Listings: listings,
+	})
 }

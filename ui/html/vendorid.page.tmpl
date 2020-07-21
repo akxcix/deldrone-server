@@ -1,0 +1,37 @@
+{{template "base" .}}
+
+{{define "title"}}Listings{{end}}
+
+{{define "body"}}
+    {{with .Vendor}}
+        <table>
+            <tr>
+                <th>Vendor Name</th>
+                <th>Address</th>
+                <th>Pincode</th>
+                <th>Phone</th>
+            </tr>
+            <tr>
+                <td>{{.Name}}</td>
+                <td>{{.Address}}</td>
+                <td>{{.Pincode}}</td>
+                <td>{{.Phone}}</td>
+            </tr>
+            </table>
+        </table>
+    {{end}}
+    {{if .Listings}}
+        <table>
+            <tr>
+                <th>Name</th>
+                <th>Price</th>
+            </tr>
+            {{range .Listings}}
+            <tr>
+                <td><a href="/listing/{{.ID}}">{{.Name}}</a></td>
+                <td>{{.Price}}</td>
+            </tr>
+            {{end}}
+        </table>
+    {{end}}
+{{end}}

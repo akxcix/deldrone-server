@@ -58,6 +58,18 @@ func (m *CustomerModel) Authenticate(email, password string) (int, error) {
 }
 
 // Get fetches the details of the customer using its id
-func (m *CustomerModel) Get(id int) *models.Customer {
-	return nil
+func (m *CustomerModel) Get(id int) (*models.Customer, error) {
+	stmt := `SELECT cust_id, cust_name, cust_address, cust_pincode, cust_phone, cust_email
+	FROM customers
+	WHERE cust_id = ?`
+
+	row := m.DB.QueryRow(stmt, id)
+	customer := &models.Customer{}
+	err := row.Scan(&customer.ID, &customer.Name, &customer.Address, &customer.Pincode, &customer.Phone, &customer.Email)
+	if err == sql.ErrNoRows {
+		return nil, models.ErrNoRecord
+	} else if err != nil {
+		return nil, err
+	}
+	return customer, nil
 }
