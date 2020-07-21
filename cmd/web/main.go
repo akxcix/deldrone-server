@@ -8,9 +8,9 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/deldrone/server/pkg/models/mysql"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/sessions"
+	"github.com/iamadarshk/deldrone-server/pkg/models/mysql"
 )
 
 type application struct {

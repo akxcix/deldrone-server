@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/deldrone/server/pkg/forms"
-	"github.com/deldrone/server/pkg/models"
+	"github.com/iamadarshk/deldrone-server/pkg/forms"
+	"github.com/iamadarshk/deldrone-server/pkg/models"
 )
 
 // Not Found

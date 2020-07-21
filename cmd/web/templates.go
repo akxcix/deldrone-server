@@ -4,8 +4,8 @@ import (
 	"html/template"
 	"path/filepath"
 
-	"github.com/deldrone/server/pkg/forms"
-	"github.com/deldrone/server/pkg/models"
+	"github.com/iamadarshk/deldrone-server/pkg/forms"
+	"github.com/iamadarshk/deldrone-server/pkg/models"
 )
 
 type templateData struct {

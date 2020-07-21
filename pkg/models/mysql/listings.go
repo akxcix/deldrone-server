@@ -3,7 +3,7 @@ package mysql
 import (
 	"database/sql"
 
-	"github.com/deldrone/server/pkg/models"
+	"github.com/iamadarshk/deldrone-server/pkg/models"
 )
 
 // ListingModel wraps a connection pool

@@ -3,8 +3,8 @@ package mysql
 import (
 	"database/sql"
 
-	"github.com/deldrone/server/pkg/models"
 	"github.com/go-sql-driver/mysql"
+	"github.com/iamadarshk/deldrone-server/pkg/models"
 	"golang.org/x/crypto/bcrypt"
 )
 

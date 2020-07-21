@@ -1,4 +1,4 @@
-module github.com/deldrone/server
+module github.com/iamadarshk/deldrone-server
 
 go 1.14
 
