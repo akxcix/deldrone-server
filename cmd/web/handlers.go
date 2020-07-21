@@ -259,7 +259,43 @@ func (app *application) listingCreateForm(w http.ResponseWriter, r *http.Request
 }
 
 func (app *application) listingCreate(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Listing will be created"))
+	session, err := app.sessionStore.Get(r, "session-name")
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	err = r.ParseForm()
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	form := forms.New(r.PostForm)
+	form.Required("name", "description", "price")
+	if !form.Valid() {
+		app.render(w, r, "listingcreate.page.tmpl", &templateData{Form: form})
+		return
+	}
+	vendorID := session.Values["vendorID"].(int)
+	price, err := strconv.Atoi(form.Get("price"))
+	if err != nil {
+		form.Errors.Add("price", "enter valid integer")
+	}
+	err = app.listings.Insert(
+		vendorID,
+		price,
+		form.Get("description"),
+		form.Get("name"),
+	)
+	if err != nil {
+		app.serverError(w, err)
+	}
+
+	session.AddFlash("Succesful Listed")
+	err = session.Save(r, w)
+	if err != nil {
+		app.serverError(w, err)
+	}
+	http.Redirect(w, r, "/vendor/listings", http.StatusSeeOther)
 }
 
 // Customer ---------------------------------------------------------------------------------------
