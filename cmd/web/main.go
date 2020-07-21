@@ -20,6 +20,7 @@ type application struct {
 	sessionStore  *sessions.CookieStore
 	customers     *mysql.CustomerModel
 	vendors       *mysql.VendorModel
+	listings      *mysql.ListingModel
 }
 
 func main() {
@@ -27,8 +28,8 @@ func main() {
 	addr := flag.String("addr", ":443", "HTTP Address")
 	tls := flag.Bool("tls", false, "Use TLS server")
 	dsn := flag.String("dsn", "web:pass@/deldrone?parseTime=true", "Database DSN")
-	authkey := flag.String("authkey", "super-secret-key", "Authentication key for sessions")
-	encryptionkey := flag.String("encryptionkey", "super-secret-key", "Encryption key for sessions")
+	authkey := flag.String("authkey", "super-secret-key", "Authentication key for sessions. Use 32 or 64 bytes.")
+	encryptionkey := flag.String("encryptionkey", "super-secret-key", "Encryption key for sessions. Use 16, 24 or 32 bytes")
 	flag.Parse()
 
 	// different loggers to seperate informative logs and error logs
@@ -69,6 +70,7 @@ func main() {
 		sessionStore:  store,
 		customers:     &mysql.CustomerModel{DB: db},
 		vendors:       &mysql.VendorModel{DB: db},
+		listings:      &mysql.ListingModel{DB: db},
 	}
 
 	// server settings

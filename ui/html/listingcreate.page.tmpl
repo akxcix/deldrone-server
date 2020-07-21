@@ -1,0 +1,35 @@
+{{template "base" .}}
+
+{{define "title"}}New Listing{{end}}
+
+{{define "body"}}
+    <form action="/listing/create" method="POST">
+        <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+        {{with .Form}}
+            <div>
+                <label>Name: </label>
+                {{with .Errors.Get "name"}}
+                    <label class="error">{{.}}</label>
+                {{end}}
+                <input type="text" name="name" value="{{.Get "name"}}">
+            </div>
+            <div>
+                <label>Description: </label>
+                {{with .Errors.Get "description"}}
+                    <label class="error">{{.}}</label>
+                {{end}}
+                <input type="text" name="description" value="{{.Get "description"}}">
+            </div>
+            <div>
+                <label>Price: </label>
+                {{with .Errors.Get "price"}}
+                    <label class="error">{{.}}</label>
+                {{end}}
+                <input type="number" name="price" value="{{.Get "price"}}">
+            </div>
+            <div>
+                <input type="submit" value="Create">
+            </div>
+        {{end}}
+    </form>
+{{end}}

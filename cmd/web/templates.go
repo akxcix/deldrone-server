@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 
 	"github.com/deldrone/server/pkg/forms"
+	"github.com/deldrone/server/pkg/models"
 )
 
 type templateData struct {
@@ -13,6 +14,8 @@ type templateData struct {
 	AuthenticatedVendor   int
 	Form                  *forms.Form
 	Flash                 string
+	Listing               *models.Listing
+	Listings              []*models.Listing
 }
 
 func newTemplateCache(dir string) (map[string]*template.Template, error) {

@@ -8,16 +8,29 @@ import (
 	"github.com/deldrone/server/pkg/models"
 )
 
+// Not Found
+func (app *application) default404(w http.ResponseWriter, r *http.Request) {
+	app.render(w, r, "404.page.tmpl", nil)
+}
+
+// Home -------------------------------------------------------------------------------------------
+
+// home shows a home page according to login status
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	app.render(w, r, "home.page.tmpl", nil)
 }
 
+// SignUp -----------------------------------------------------------------------------------------
+
+// signupForm shows a form for users to signup
 func (app *application) signupForm(w http.ResponseWriter, r *http.Request) {
 	app.render(w, r, "signup.page.tmpl", &templateData{
 		Form: forms.New(nil),
 	})
 }
 
+// signup handles the signup process.
+// it validates the form, creates users and handles related errors
 func (app *application) signup(w http.ResponseWriter, r *http.Request) {
 	// get session
 	session, err := app.sessionStore.Get(r, "session-name")
@@ -118,6 +131,8 @@ func (app *application) signup(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
 
+// Login ------------------------------------------------------------------------------------------
+
 func (app *application) loginForm(w http.ResponseWriter, r *http.Request) {
 	app.render(w, r, "login.page.tmpl", &templateData{
 		Form: forms.New(nil),
@@ -180,6 +195,8 @@ func (app *application) login(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Logout -----------------------------------------------------------------------------------------
+
 func (app *application) logout(w http.ResponseWriter, r *http.Request) {
 	session, err := app.sessionStore.Get(r, "session-name")
 	if err != nil {
@@ -209,18 +226,43 @@ func (app *application) logout(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (app *application) vendorHome(w http.ResponseWriter, r *http.Request) {
-	// session, err := app.sessionStore.Get(r, "session-name")
-	// if err != nil {
-	// 	app.serverError(w, err)
-	// 	return
-	// }
-	// vendorID := session.Values["vendorID"]
-	// str := fmt.Sprintf("Vendor Home.\nYout ID is : %d.\nDisplays pending orders.", vendorID)
-	// w.Write([]byte(str))
-	app.render(w, r, "vendorhome.page.tmpl", nil)
+// Vendor -----------------------------------------------------------------------------------------
 
+func (app *application) vendorHome(w http.ResponseWriter, r *http.Request) {
+	app.render(w, r, "vendorhome.page.tmpl", nil)
 }
+
+func (app *application) vendorListings(w http.ResponseWriter, r *http.Request) {
+	session, err := app.sessionStore.Get(r, "session-name")
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	vendorID := session.Values["vendorID"].(int)
+
+	listings, err := app.listings.All(vendorID)
+	if err != nil {
+		app.serverError(w, err)
+	}
+
+	app.render(w, r, "vendorlistings.page.tmpl", &templateData{Listings: listings})
+}
+
+func (app *application) vendorOrders(w http.ResponseWriter, r *http.Request) {
+	app.render(w, r, "vendororders.page.tmpl", nil)
+}
+
+func (app *application) listingCreateForm(w http.ResponseWriter, r *http.Request) {
+	app.render(w, r, "listingcreate.page.tmpl", &templateData{
+		Form: forms.New(nil),
+	})
+}
+
+func (app *application) listingCreate(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("Listing will be created"))
+}
+
+// Customer ---------------------------------------------------------------------------------------
 
 func (app *application) customerHome(w http.ResponseWriter, r *http.Request) {
 	app.render(w, r, "customerhome.page.tmpl", nil)

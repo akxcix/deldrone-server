@@ -1,6 +1,9 @@
 package models
 
-import "errors"
+import (
+	"errors"
+	"time"
+)
 
 var (
 	// ErrNoRecord is used when no record is found in the database
@@ -39,12 +42,29 @@ type Vendor struct {
 
 // Listing is a model that interfaces with the listings table in the database
 type Listing struct {
+	ID          int
+	VendorID    int
+	Price       int
+	Description string
+	Name        string
 }
 
 // Delivery is a model that interfaces with the deliveries table in the database
 type Delivery struct {
+	ID             int
+	CustomerID     int
+	VendorID       int
+	TimeOfDelivery time.Time
+	DropLat        float64
+	DropLong       float64
+	Status         string
 }
 
 // Order is a model that interfaces with the orders table in the database
 type Order struct {
+	ID         int
+	DeliveryID int
+	ListingID  int
+	Quant      int
+	Amount     int
 }

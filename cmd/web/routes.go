@@ -10,6 +10,7 @@ import (
 // routes defines a router through which we register our handler functions with specific routes
 func (app *application) routes() http.Handler {
 	r := mux.NewRouter()
+	r.NotFoundHandler = http.HandlerFunc(app.default404)
 
 	// TODO: cleanup middleware
 	r.Handle("/", noSurf(http.HandlerFunc(app.home))).Methods("GET")
@@ -19,6 +20,10 @@ func (app *application) routes() http.Handler {
 	r.Handle("/login", noSurf(http.HandlerFunc(app.login))).Methods("POST")
 	r.Handle("/customer/home", app.requireAuthenticatedCustomer(http.HandlerFunc(app.customerHome))).Methods("GET")
 	r.Handle("/vendor/home", app.requireAuthenticatedVendor(http.HandlerFunc(app.vendorHome))).Methods("GET")
+	r.Handle("/vendor/listings", app.requireAuthenticatedVendor(http.HandlerFunc(app.vendorListings))).Methods("GET")
+	r.Handle("/listing/create", app.requireAuthenticatedVendor(http.HandlerFunc(app.listingCreateForm))).Methods("GET")
+	r.Handle("/listing/create", app.requireAuthenticatedVendor(http.HandlerFunc(app.listingCreate))).Methods("POST")
+	r.Handle("/vendor/orders", app.requireAuthenticatedVendor(http.HandlerFunc(app.vendorOrders))).Methods("GET")
 	r.Handle("/logout", app.requireAuthenticatedUser(http.HandlerFunc(app.logout))).Methods("POST")
 
 	fileServer := http.FileServer(http.Dir("./ui/static/"))

@@ -1,0 +1,25 @@
+{{template "base" .}}
+
+{{define "title"}}Listings{{end}}
+
+{{define "body"}}
+    {{if .Listings}}
+        <table>
+            <tr>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Price</th>
+            </tr>
+            {{range .Listings}}
+            <tr>
+                <td><a href="/listing/{{.ID}}">{{.Name}}</a></td>
+                <td>{{.Description}}</td>
+                <td>{{.Price}}</td>
+            </tr>
+            {{end}}
+        </table>
+    {{else}}
+        <p>You do not have any listings yet. Add one to get started.</p>
+    {{end}}
+    <a class="button" href="/listing/create">Add New</a>
+{{end}}

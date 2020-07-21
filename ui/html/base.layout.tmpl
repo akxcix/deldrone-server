@@ -10,15 +10,22 @@
     </head>
     <body>
         <header>
-            <h1><a href="/">DelDrone</a></h1>
+            {{if .AuthenticatedCustomer}}
+                    <h1><a href="/customer/home">DelDrone</a></h1>
+                {{else if .AuthenticatedVendor}}
+                    <h1><a href="/vendor/home">DelDrone</a></h1>
+                {{else}}
+                    <h1><a href="/">DelDrone</a></h1>
+                {{end}}
         </header>
         <nav>
             <div>
                 {{if .AuthenticatedCustomer}}
                     <a href="/customer/home">Home</a>
-                {{end}}
-                {{if .AuthenticatedVendor}}
+                {{else if .AuthenticatedVendor}}
                     <a href="/vendor/home">Home</a>
+                    <a href="/vendor/listings">Listings</a>
+                    <a href="/vendor/orders">Orders</a>
                 {{end}}
             </div>
             <div>
