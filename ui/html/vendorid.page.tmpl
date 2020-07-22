@@ -4,34 +4,41 @@
 
 {{define "body"}}
     {{with .Vendor}}
-        <table>
-            <tr>
-                <th>Vendor Name</th>
-                <th>Address</th>
-                <th>Pincode</th>
-                <th>Phone</th>
-            </tr>
-            <tr>
-                <td>{{.Name}}</td>
-                <td>{{.Address}}</td>
-                <td>{{.Pincode}}</td>
-                <td>{{.Phone}}</td>
-            </tr>
+        <div>
+            <table>
+                <tr>
+                    <th>Vendor Name</th>
+                    <th>Address</th>
+                    <th>Pincode</th>
+                    <th>Phone</th>
+                </tr>
+                <tr>
+                    <td>{{.Name}}</td>
+                    <td>{{.Address}}</td>
+                    <td>{{.Pincode}}</td>
+                    <td>{{.Phone}}</td>
+                </tr>
+                </table>
             </table>
-        </table>
+            <p>
+                The vendor has following items for sale. Click on the item to view full details.
+            </p>
+        </div>
     {{end}}
     {{if .Listings}}
-        <table>
-            <tr>
-                <th>Name</th>
-                <th>Price</th>
-            </tr>
-            {{range .Listings}}
-            <tr>
-                <td><a href="/listing/{{.ID}}">{{.Name}}</a></td>
-                <td>{{.Price}}</td>
-            </tr>
-            {{end}}
-        </table>
+        <div>
+            <table>
+                <tr>
+                    <th>Name</th>
+                    <th>Price</th>
+                </tr>
+                {{range .Listings}}
+                <tr>
+                    <td><a href="/listing/{{.ID}}">{{.Name}}</a></td>
+                    <td>{{.Price}}</td>
+                </tr>
+                {{end}}
+            </table>
+        </div>
     {{end}}
 {{end}}

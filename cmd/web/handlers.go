@@ -253,6 +253,52 @@ func (app *application) vendorOrders(w http.ResponseWriter, r *http.Request) {
 	app.render(w, r, "vendororders.page.tmpl", nil)
 }
 
+// Customer ---------------------------------------------------------------------------------------
+
+func (app *application) customerHome(w http.ResponseWriter, r *http.Request) {
+	session, err := app.sessionStore.Get(r, "session-name")
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	customerID := session.Values["customerID"].(int)
+	customer, err := app.customers.Get(customerID)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	vendors, err := app.vendors.GetByPincode(customer.Pincode, 5)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	app.render(w, r, "customerhome.page.tmpl", &templateData{Vendors: vendors})
+}
+
+func (app *application) vendorIDPage(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	vendorID, err := strconv.Atoi(vars["vendorID"])
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	vendor, err := app.vendors.Get(vendorID)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	listings, err := app.listings.All(vendorID)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	app.render(w, r, "vendorid.page.tmpl", &templateData{
+		Vendor:   vendor,
+		Listings: listings,
+	})
+}
+
+// Listings ---------------------------------------------------------------------------------------
 func (app *application) listingCreateForm(w http.ResponseWriter, r *http.Request) {
 	app.render(w, r, "listingcreate.page.tmpl", &templateData{
 		Form: forms.New(nil),
@@ -299,47 +345,20 @@ func (app *application) listingCreate(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/vendor/listings", http.StatusSeeOther)
 }
 
-// Customer ---------------------------------------------------------------------------------------
-
-func (app *application) customerHome(w http.ResponseWriter, r *http.Request) {
-	session, err := app.sessionStore.Get(r, "session-name")
-	if err != nil {
-		app.serverError(w, err)
-		return
-	}
-	customerID := session.Values["customerID"].(int)
-	customer, err := app.customers.Get(customerID)
-	if err != nil {
-		app.serverError(w, err)
-		return
-	}
-	vendors, err := app.vendors.GetByPincode(customer.Pincode, 5)
-	if err != nil {
-		app.serverError(w, err)
-		return
-	}
-	app.render(w, r, "customerhome.page.tmpl", &templateData{Vendors: vendors})
-}
-
-func (app *application) vendorIDPage(w http.ResponseWriter, r *http.Request) {
+func (app *application) listingID(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	vendorID, err := strconv.Atoi(vars["vendorID"])
+	listingID, err := strconv.Atoi(vars["listingID"])
 	if err != nil {
 		app.clientError(w, http.StatusBadRequest)
 		return
 	}
-	vendor, err := app.vendors.Get(vendorID)
-	if err != nil {
-		app.serverError(w, err)
+	listing, err := app.listings.Get(listingID)
+	if err == models.ErrNoRecord {
+		app.clientError(w, http.StatusBadRequest)
 		return
-	}
-	listings, err := app.listings.All(vendorID)
-	if err != nil {
+	} else if err != nil {
 		app.serverError(w, err)
-		return
 	}
-	app.render(w, r, "vendorid.page.tmpl", &templateData{
-		Vendor:   vendor,
-		Listings: listings,
-	})
+
+	app.render(w, r, "listingid.page.tmpl", &templateData{Listing: listing})
 }

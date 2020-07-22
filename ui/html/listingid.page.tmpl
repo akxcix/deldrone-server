@@ -1,0 +1,25 @@
+{{template "base" .}}
+
+{{define "title"}}Listing # - {{.Listing.ID}} {{end}}
+
+{{define "body"}}
+    {{with .Listing}}
+        <table>
+            <tr>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Price</th>
+            </tr>
+            <tr>
+                <td>{{.Name}}</a></td>
+                <td>{{.Description}}</td>
+                <td>{{.Price}}</td>
+            </tr>
+        </table>
+    {{end}}
+    {{if .AuthenticatedCustomer}}
+        <a class="button" href="/customer/addtocart/{{.Listing.ID}}">Add To Cart</a>
+    {{else if .AuthenticatedVendor}}
+        <a class="button" href="/listing/update/{{.Listing.ID}}">Update</a>
+    {{end}}
+{{end}}
