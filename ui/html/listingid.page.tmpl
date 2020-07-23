@@ -18,7 +18,16 @@
         </table>
     {{end}}
     {{if .AuthenticatedCustomer}}
-        <a class="button" href="/customer/addtocart/{{.Listing.ID}}">Add To Cart</a>
+        <form action="/customer/addtocart/{{.Listing.ID}}" method="POST">
+            <div>
+                <label>Quantity: </label>
+                {{with .Form.Errors.Get "quantity"}}
+                    <label class="error">{{.}}</label>
+                {{end}}
+                <input type="number" name="quantity" value="0">
+                <input type="submit" value="Add To Cart">
+            </div>
+        </form>
     {{else if .AuthenticatedVendor}}
         <a class="button" href="/listing/update/{{.Listing.ID}}">Update</a>
     {{end}}

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -18,6 +19,13 @@ func (app *application) default404(w http.ResponseWriter, r *http.Request) {
 
 // home shows a home page according to login status
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
+	if app.authenticatedCustomer(r) != 0 {
+		http.Redirect(w, r, "/customer/home", http.StatusFound)
+		return
+	} else if app.authenticatedVendor(r) != 0 {
+		http.Redirect(w, r, "/vendor/home", http.StatusFound)
+		return
+	}
 	app.render(w, r, "home.page.tmpl", nil)
 }
 
@@ -298,6 +306,71 @@ func (app *application) vendorIDPage(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func (app *application) customerCart(w http.ResponseWriter, r *http.Request) {
+	customerID := app.authenticatedCustomer(r)
+	cart := app.carts[customerID]
+	// for key, value := range cart {
+	// 	fmt.Fprintf(w, "%v: %v", key, value)
+	// }
+	fmt.Fprintf(w, "%v", cart)
+}
+
+func (app *application) customerAddToCart(w http.ResponseWriter, r *http.Request) {
+	session, err := app.sessionStore.Get(r, "session-name")
+	if err != nil {
+		app.serverError(w, err)
+	}
+	vars := mux.Vars(r)
+	listingID, err := strconv.Atoi(vars["listingID"])
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	err = r.ParseForm()
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	form := forms.New(r.PostForm)
+	form.Required("quantity")
+	quantity, err := strconv.Atoi(form.Get("quantity"))
+	if err != nil || quantity < 0 {
+		form.Errors.Add("quantity", "Enter a valid quantity")
+	}
+	if !form.Valid() {
+		listing, err := app.listings.Get(listingID)
+		if err == models.ErrNoRecord {
+			app.clientError(w, http.StatusBadRequest)
+			return
+		} else if err != nil {
+			app.serverError(w, err)
+		}
+
+		app.render(w, r, "listingid.page.tmpl", &templateData{
+			Listing: listing,
+			Form:    form,
+		})
+		return
+	}
+
+	customerID := app.authenticatedCustomer(r)
+	cart := app.carts[customerID]
+	if cart == nil {
+		cart = models.Cart{}
+	}
+	app.carts[customerID] = cart.Add(listingID, quantity)
+	session.AddFlash("Added to Cart")
+	err = session.Save(r, w)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	url := fmt.Sprintf("/listing/%d", listingID)
+	http.Redirect(w, r, url, http.StatusSeeOther)
+	return
+	// fmt.Fprintf(w, "%v", app.carts[customerID][listingID])
+}
+
 // Listings ---------------------------------------------------------------------------------------
 func (app *application) listingCreateForm(w http.ResponseWriter, r *http.Request) {
 	app.render(w, r, "listingcreate.page.tmpl", &templateData{
@@ -322,7 +395,7 @@ func (app *application) listingCreate(w http.ResponseWriter, r *http.Request) {
 		app.render(w, r, "listingcreate.page.tmpl", &templateData{Form: form})
 		return
 	}
-	vendorID := session.Values["vendorID"].(int)
+	vendorID := app.authenticatedVendor(r)
 	price, err := strconv.Atoi(form.Get("price"))
 	if err != nil {
 		form.Errors.Add("price", "enter valid integer")
@@ -360,5 +433,8 @@ func (app *application) listingID(w http.ResponseWriter, r *http.Request) {
 		app.serverError(w, err)
 	}
 
-	app.render(w, r, "listingid.page.tmpl", &templateData{Listing: listing})
+	app.render(w, r, "listingid.page.tmpl", &templateData{
+		Listing: listing,
+		Form:    forms.New(nil),
+	})
 }

@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/iamadarshk/deldrone-server/pkg/models"
+
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/sessions"
 	"github.com/iamadarshk/deldrone-server/pkg/models/mysql"
@@ -21,6 +23,7 @@ type application struct {
 	customers     *mysql.CustomerModel
 	vendors       *mysql.VendorModel
 	listings      *mysql.ListingModel
+	carts         map[int]models.Cart
 }
 
 func main() {
@@ -71,6 +74,7 @@ func main() {
 		customers:     &mysql.CustomerModel{DB: db},
 		vendors:       &mysql.VendorModel{DB: db},
 		listings:      &mysql.ListingModel{DB: db},
+		carts:         make(map[int]models.Cart),
 	}
 
 	// server settings

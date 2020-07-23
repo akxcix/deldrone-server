@@ -19,6 +19,8 @@ func (app *application) routes() http.Handler {
 	r.Handle("/login", noSurf(http.HandlerFunc(app.loginForm))).Methods("GET")
 	r.Handle("/login", noSurf(http.HandlerFunc(app.login))).Methods("POST")
 	r.Handle("/customer/home", app.requireAuthenticatedCustomer(http.HandlerFunc(app.customerHome))).Methods("GET")
+	r.Handle("/customer/cart", app.requireAuthenticatedCustomer(http.HandlerFunc(app.customerCart))).Methods("GET")
+	r.Handle("/customer/addtocart/{listingID}", app.requireAuthenticatedCustomer(http.HandlerFunc(app.customerAddToCart))).Methods("POST")
 	r.Handle("/vendor/home", app.requireAuthenticatedVendor(http.HandlerFunc(app.vendorHome))).Methods("GET")
 	r.Handle("/vendor/listings", app.requireAuthenticatedVendor(http.HandlerFunc(app.vendorListings))).Methods("GET")
 	r.Handle("/listing/create", app.requireAuthenticatedVendor(http.HandlerFunc(app.listingCreateForm))).Methods("GET")

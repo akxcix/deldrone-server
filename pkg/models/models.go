@@ -68,3 +68,18 @@ type Order struct {
 	Quant      int
 	Amount     int
 }
+
+// Cart is a struct that denotes a user's cart. The Key is the listing's id and value is it's quantity
+type Cart map[int]int
+
+// Add adds the item with listingID and quantity to cart
+func (cart Cart) Add(listingID, quantity int) Cart {
+	cart[listingID] = quantity
+	return cart
+}
+
+// Get fetches the quantity of an item in cart, returns 0 if not added
+func (cart Cart) Get(listingID int) int {
+	quantity := cart[listingID]
+	return quantity
+}
