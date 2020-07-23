@@ -309,10 +309,30 @@ func (app *application) vendorIDPage(w http.ResponseWriter, r *http.Request) {
 func (app *application) customerCart(w http.ResponseWriter, r *http.Request) {
 	customerID := app.authenticatedCustomer(r)
 	cart := app.carts[customerID]
-	// for key, value := range cart {
-	// 	fmt.Fprintf(w, "%v: %v", key, value)
-	// }
-	fmt.Fprintf(w, "%v", cart)
+
+	cartRowSlice := make([]cartRow, 0)
+	total := 0
+
+	for listID, quantity := range cart {
+		listing, err := app.listings.Get(listID)
+		if err != nil {
+			app.serverError(w, err)
+		}
+		row := cartRow{
+			ListingID: listing.ID,
+			Name:      listing.Name,
+			Price:     listing.Price,
+			Quantity:  quantity,
+			Amount:    quantity * listing.Price,
+		}
+		cartRowSlice = append(cartRowSlice, row)
+		total += quantity * listing.Price
+	}
+	app.render(w, r, "customercart.page.tmpl", &templateData{
+		Cart:      cartRowSlice,
+		CartTotal: total,
+	})
+	return
 }
 
 func (app *application) customerAddToCart(w http.ResponseWriter, r *http.Request) {
@@ -334,8 +354,8 @@ func (app *application) customerAddToCart(w http.ResponseWriter, r *http.Request
 	form := forms.New(r.PostForm)
 	form.Required("quantity")
 	quantity, err := strconv.Atoi(form.Get("quantity"))
-	if err != nil || quantity < 0 {
-		form.Errors.Add("quantity", "Enter a valid quantity")
+	if err != nil || quantity <= 0 {
+		form.Errors.Add("quantity", "Quantity must be a positive integer.")
 	}
 	if !form.Valid() {
 		listing, err := app.listings.Get(listingID)
@@ -368,7 +388,10 @@ func (app *application) customerAddToCart(w http.ResponseWriter, r *http.Request
 	url := fmt.Sprintf("/listing/%d", listingID)
 	http.Redirect(w, r, url, http.StatusSeeOther)
 	return
-	// fmt.Fprintf(w, "%v", app.carts[customerID][listingID])
+}
+
+func (app *application) checkout(w http.ResponseWriter, r *http.Request) {
+	app.render(w, r, "checkout.page.tmpl", nil)
 }
 
 // Listings ---------------------------------------------------------------------------------------

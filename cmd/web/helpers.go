@@ -9,6 +9,14 @@ import (
 	"github.com/justinas/nosurf"
 )
 
+type cartRow struct {
+	ListingID int
+	Name      string
+	Price     int
+	Quantity  int
+	Amount    int
+}
+
 func (app *application) serverError(w http.ResponseWriter, err error) {
 	trace := fmt.Sprintf("%s\n%s", err.Error(), debug.Stack())
 	app.errorLog.Println(trace)

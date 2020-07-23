@@ -1,0 +1,35 @@
+{{template "base" .}}
+
+{{define "title"}}Customer Home{{end}}
+
+{{define "body"}}
+    {{if .Cart}}
+        <table>
+            <tr>
+                <th>Name</th>
+                <th>Price</th>
+                <th>Quantity</th>
+                <th>Amount</th>
+            </tr>
+            {{range .Cart}}
+            <tr>
+                <td><a href="/listing/{{.ListingID}}">{{.Name}}</a></td>
+                <td>{{.Price}}</td>
+                <td>{{.Quantity}}</td>
+                <td>{{.Amount}}</td>
+            </tr>
+            {{end}}
+        </table>
+        <table>
+            <tr>
+                <td>Total</td>
+                <td>{{.CartTotal}}</td>
+            </tr>
+        </table>
+        <a href="/customer/checkout" class="button">Checkout</a>
+    {{else}}
+        <p>
+            Your cart is empty.
+        </p>
+    {{end}}
+{{end}}

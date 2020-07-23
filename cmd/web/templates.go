@@ -18,8 +18,8 @@ type templateData struct {
 	Listings              []*models.Listing
 	Vendor                *models.Vendor
 	Vendors               []*models.Vendor
-	Carts                 []models.Cart
-	Cart                  models.Cart
+	Cart                  []cartRow
+	CartTotal             int
 }
 
 func newTemplateCache(dir string) (map[string]*template.Template, error) {
