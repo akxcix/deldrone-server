@@ -1,9 +1,52 @@
 {{template "base" .}}
 
-{{define "title"}}Home{{end}}
+{{define "title"}}New Listing{{end}}
 
 {{define "body"}}
-    <p>
-        This page will process the payment, confirm the order, and pass the details to the drone.
-    </p>
+    {{if .Cart}}
+        <table>
+            <tr>
+                <th>Name</th>
+                <th>Price</th>
+                <th>Quantity</th>
+                <th>Amount</th>
+            </tr>
+            {{range .Cart}}
+            <tr>
+                <td><a href="/listing/{{.ListingID}}">{{.Name}}</a></td>
+                <td>{{.Price}}</td>
+                <td>{{.Quantity}}</td>
+                <td>{{.Amount}}</td>
+            </tr>
+            {{end}}
+        </table>
+        <table>
+            <tr>
+                <td>Total</td>
+                <td>{{.CartTotal}}</td>
+            </tr>
+        </table>
+    {{end}}
+    <form action="/customer/checkout" method="POST">
+        <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+        {{with .Form}}
+            <div>
+                <label>Select Drop Latitude: </label>
+                {{with .Errors.Get "drop_lat"}}
+                    <label class="error">{{.}}</label>
+                {{end}}
+                <input type="text" name="drop_lat" value="{{.Get "drop_lat"}}">
+            </div>
+            <div>
+                <label>Select Drop Longitude: </label>
+                {{with .Errors.Get "drop_long"}}
+                    <label class="error">{{.}}</label>
+                {{end}}
+                <input type="text" name="drop_long" value="{{.Get "drop_long"}}">
+            </div>
+            <div>
+                <input type="submit" value="Confirm and Pay">
+            </div>
+        {{end}}
+    </form>
 {{end}}

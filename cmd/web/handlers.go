@@ -4,13 +4,14 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/iamadarshk/deldrone-server/pkg/forms"
 	"github.com/iamadarshk/deldrone-server/pkg/models"
 )
 
-// Not Found
+// default404 handles a 404 response
 func (app *application) default404(w http.ResponseWriter, r *http.Request) {
 	app.render(w, r, "404.page.tmpl", nil)
 }
@@ -18,6 +19,7 @@ func (app *application) default404(w http.ResponseWriter, r *http.Request) {
 // Home -------------------------------------------------------------------------------------------
 
 // home shows a home page according to login status
+// path: "/", method: "GET"
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	if app.authenticatedCustomer(r) != 0 {
 		http.Redirect(w, r, "/customer/home", http.StatusFound)
@@ -32,6 +34,7 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 // SignUp -----------------------------------------------------------------------------------------
 
 // signupForm shows a form for users to signup
+// path: "signup", method: "GET"
 func (app *application) signupForm(w http.ResponseWriter, r *http.Request) {
 	app.render(w, r, "signup.page.tmpl", &templateData{
 		Form: forms.New(nil),
@@ -40,6 +43,7 @@ func (app *application) signupForm(w http.ResponseWriter, r *http.Request) {
 
 // signup handles the signup process.
 // it validates the form, creates users and handles related errors
+// path: "/signup", method: "POST"
 func (app *application) signup(w http.ResponseWriter, r *http.Request) {
 	// get session
 	session, err := app.sessionStore.Get(r, "session-name")
@@ -142,12 +146,14 @@ func (app *application) signup(w http.ResponseWriter, r *http.Request) {
 
 // Login ------------------------------------------------------------------------------------------
 
+// path: "/login", method: "GET"
 func (app *application) loginForm(w http.ResponseWriter, r *http.Request) {
 	app.render(w, r, "login.page.tmpl", &templateData{
 		Form: forms.New(nil),
 	})
 }
 
+// path: "/login", method: "POST"
 func (app *application) login(w http.ResponseWriter, r *http.Request) {
 	session, err := app.sessionStore.Get(r, "session-name")
 	if err != nil {
@@ -206,6 +212,7 @@ func (app *application) login(w http.ResponseWriter, r *http.Request) {
 
 // Logout -----------------------------------------------------------------------------------------
 
+// path: "/logout", method: "POST"
 func (app *application) logout(w http.ResponseWriter, r *http.Request) {
 	session, err := app.sessionStore.Get(r, "session-name")
 	if err != nil {
@@ -237,10 +244,12 @@ func (app *application) logout(w http.ResponseWriter, r *http.Request) {
 
 // Vendor -----------------------------------------------------------------------------------------
 
+// path: "/vendor/home", method: "GET"
 func (app *application) vendorHome(w http.ResponseWriter, r *http.Request) {
 	app.render(w, r, "vendorhome.page.tmpl", nil)
 }
 
+// path: "/vendor/listings", method: "GET"
 func (app *application) vendorListings(w http.ResponseWriter, r *http.Request) {
 	session, err := app.sessionStore.Get(r, "session-name")
 	if err != nil {
@@ -257,12 +266,14 @@ func (app *application) vendorListings(w http.ResponseWriter, r *http.Request) {
 	app.render(w, r, "vendorlistings.page.tmpl", &templateData{Listings: listings})
 }
 
+// path: "/vendor/orders", method: "GET"
 func (app *application) vendorOrders(w http.ResponseWriter, r *http.Request) {
 	app.render(w, r, "vendororders.page.tmpl", nil)
 }
 
 // Customer ---------------------------------------------------------------------------------------
 
+// path: "/customer/home", method: "GET"
 func (app *application) customerHome(w http.ResponseWriter, r *http.Request) {
 	session, err := app.sessionStore.Get(r, "session-name")
 	if err != nil {
@@ -283,6 +294,7 @@ func (app *application) customerHome(w http.ResponseWriter, r *http.Request) {
 	app.render(w, r, "customerhome.page.tmpl", &templateData{Vendors: vendors})
 }
 
+// path: "/vendor/{vendorID}", method: "GET"
 func (app *application) vendorIDPage(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	vendorID, err := strconv.Atoi(vars["vendorID"])
@@ -306,6 +318,7 @@ func (app *application) vendorIDPage(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// path: "/cutsomer/cart", method: "GET"
 func (app *application) customerCart(w http.ResponseWriter, r *http.Request) {
 	customerID := app.authenticatedCustomer(r)
 	cart := app.carts[customerID]
@@ -335,6 +348,7 @@ func (app *application) customerCart(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
+// path: "/customer/addtocart/{listingID}", method: "POST"
 func (app *application) customerAddToCart(w http.ResponseWriter, r *http.Request) {
 	session, err := app.sessionStore.Get(r, "session-name")
 	if err != nil {
@@ -390,17 +404,113 @@ func (app *application) customerAddToCart(w http.ResponseWriter, r *http.Request
 	return
 }
 
+// Checkout ---------------------------------------------------------------------------------------
+
+// path: "/customer/checkout", method: "GET"
+func (app *application) checkoutForm(w http.ResponseWriter, r *http.Request) {
+	session, err := app.sessionStore.Get(r, "session-name")
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	customerID := session.Values["customerID"].(int)
+	cart := app.carts[customerID]
+
+	cartRowSlice := make([]cartRow, 0)
+	total := 0
+
+	for listID, quantity := range cart {
+		listing, err := app.listings.Get(listID)
+		if err != nil {
+			app.serverError(w, err)
+		}
+		row := cartRow{
+			ListingID: listing.ID,
+			Name:      listing.Name,
+			Price:     listing.Price,
+			Quantity:  quantity,
+			Amount:    quantity * listing.Price,
+		}
+		cartRowSlice = append(cartRowSlice, row)
+		total += quantity * listing.Price
+	}
+	app.render(w, r, "checkout.page.tmpl", &templateData{
+		Cart:      cartRowSlice,
+		CartTotal: total,
+		Form:      forms.New(nil),
+	})
+}
+
+// path: "/customer/checkout", method: "POST"
 func (app *application) checkout(w http.ResponseWriter, r *http.Request) {
-	app.render(w, r, "checkout.page.tmpl", nil)
+	session, err := app.sessionStore.Get(r, "session-name")
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	customerID := session.Values["customerID"].(int)
+	cart := app.carts[customerID]
+	vendorID := 0
+
+	// check if all items in cart are from same vendor
+	for listingID := range cart {
+		listing, err := app.listings.Get(listingID)
+		if err != nil {
+			app.serverError(w, err)
+			return
+		}
+		if vendorID == 0 {
+			vendorID = listing.VendorID
+		} else if vendorID != listing.VendorID {
+			session.AddFlash("Please select items from only one vendor.")
+			err = session.Save(r, w)
+			if err != nil {
+				app.serverError(w, err)
+				return
+			}
+			http.Redirect(w, r, "/customer/checkout", http.StatusSeeOther)
+			return
+		}
+	}
+	err = r.ParseForm()
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	form := forms.New(r.PostForm)
+	form.Required("drop_long", "drop_lat")
+	dropLat, err := strconv.ParseFloat(form.Get("drop_lat"), 64)
+	if err != nil {
+		form.Errors.Add("drop_lat", "enter valid floating point number")
+	}
+	dropLong, err := strconv.ParseFloat(form.Get("drop_long"), 64)
+	if err != nil {
+		form.Errors.Add("drop_long", "enter valid floating point number")
+	}
+	if !form.Valid() {
+		app.render(w, r, "checkout.page.tmpl", &templateData{Form: form})
+		return
+	}
+
+	err = app.deliveries.Insert(customerID, vendorID, time.Now(), dropLat, dropLong)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	w.Write([]byte("inserted into database"))
+	// app.render(w, r, "checkout.page.tmpl", nil)
 }
 
 // Listings ---------------------------------------------------------------------------------------
+
+// path: "/listing/create", method: "GET"
 func (app *application) listingCreateForm(w http.ResponseWriter, r *http.Request) {
 	app.render(w, r, "listingcreate.page.tmpl", &templateData{
 		Form: forms.New(nil),
 	})
 }
 
+// path: "/listing/create", method: "POST"
 func (app *application) listingCreate(w http.ResponseWriter, r *http.Request) {
 	session, err := app.sessionStore.Get(r, "session-name")
 	if err != nil {
@@ -441,6 +551,7 @@ func (app *application) listingCreate(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/vendor/listings", http.StatusSeeOther)
 }
 
+// path: "/listing/{listingID}", method: "GET"
 func (app *application) listingID(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	listingID, err := strconv.Atoi(vars["listingID"])

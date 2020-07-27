@@ -23,6 +23,7 @@ type application struct {
 	customers     *mysql.CustomerModel
 	vendors       *mysql.VendorModel
 	listings      *mysql.ListingModel
+	deliveries    *mysql.DeliveryModel
 	carts         map[int]models.Cart
 }
 
@@ -74,6 +75,7 @@ func main() {
 		customers:     &mysql.CustomerModel{DB: db},
 		vendors:       &mysql.VendorModel{DB: db},
 		listings:      &mysql.ListingModel{DB: db},
+		deliveries:    &mysql.DeliveryModel{DB: db},
 		carts:         make(map[int]models.Cart),
 	}
 
