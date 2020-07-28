@@ -3,7 +3,24 @@
 {{define "title"}}Orders{{end}}
 
 {{define "body"}}
+    {{if .Deliveries}}
+    <table>
+        <tr>
+            <th>Order #</th>
+            <th>Time Placed</th>
+            <th>Status</th>
+        </tr>
+        {{range .Deliveries}}
+        <tr>
+            <td><a href="/delivery/{{.ID}}">{{.ID}}</a></td>
+            <td>{{.TimeOfDelivery}}</td>
+            <td>{{.Status}}</td>
+        </tr>
+        {{end}}
+    </table>
+    {{else}}
     <p>
-        Shows all Orders, most recent first.
+        There are no active orders.
     </p>
+    {{end}}
 {{end}}

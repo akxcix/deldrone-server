@@ -246,7 +246,20 @@ func (app *application) logout(w http.ResponseWriter, r *http.Request) {
 
 // path: "/vendor/home", method: "GET"
 func (app *application) vendorHome(w http.ResponseWriter, r *http.Request) {
-	app.render(w, r, "vendorhome.page.tmpl", nil)
+	session, err := app.sessionStore.Get(r, "session-name")
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	vendorID := session.Values["vendorID"].(int)
+
+	deliveries, err := app.deliveries.GetAllByVendorIDStatus(vendorID, "placed")
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	app.render(w, r, "vendorhome.page.tmpl", &templateData{Deliveries: deliveries})
 }
 
 // path: "/vendor/listings", method: "GET"
@@ -268,7 +281,20 @@ func (app *application) vendorListings(w http.ResponseWriter, r *http.Request) {
 
 // path: "/vendor/orders", method: "GET"
 func (app *application) vendorOrders(w http.ResponseWriter, r *http.Request) {
-	app.render(w, r, "vendororders.page.tmpl", nil)
+	session, err := app.sessionStore.Get(r, "session-name")
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	vendorID := session.Values["vendorID"].(int)
+
+	deliveries, err := app.deliveries.GetAllByVendorID(vendorID)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	app.render(w, r, "vendororders.page.tmpl", &templateData{Deliveries: deliveries})
 }
 
 // Customer ---------------------------------------------------------------------------------------
@@ -318,7 +344,7 @@ func (app *application) vendorIDPage(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// path: "/cutsomer/cart", method: "GET"
+// path: "/customer/cart", method: "GET"
 func (app *application) customerCart(w http.ResponseWriter, r *http.Request) {
 	customerID := app.authenticatedCustomer(r)
 	cart := app.carts[customerID]
@@ -404,6 +430,40 @@ func (app *application) customerAddToCart(w http.ResponseWriter, r *http.Request
 	return
 }
 
+func (app *application) activeOrders(w http.ResponseWriter, r *http.Request) {
+	session, err := app.sessionStore.Get(r, "session-name")
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	customerID := session.Values["customerID"].(int)
+
+	deliveries, err := app.deliveries.GetAllByCustomerIDStatus(customerID, "placed")
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	app.render(w, r, "customerorders.page.tmpl", &templateData{Deliveries: deliveries})
+}
+
+func (app *application) pastOrders(w http.ResponseWriter, r *http.Request) {
+	session, err := app.sessionStore.Get(r, "session-name")
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	customerID := session.Values["customerID"].(int)
+
+	deliveries, err := app.deliveries.GetAllByCustomerID(customerID)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	app.render(w, r, "customerorders.page.tmpl", &templateData{Deliveries: deliveries})
+}
+
 // Checkout ---------------------------------------------------------------------------------------
 
 // path: "/customer/checkout", method: "GET"
@@ -423,6 +483,7 @@ func (app *application) checkoutForm(w http.ResponseWriter, r *http.Request) {
 		listing, err := app.listings.Get(listID)
 		if err != nil {
 			app.serverError(w, err)
+			return
 		}
 		row := cartRow{
 			ListingID: listing.ID,
@@ -492,13 +553,30 @@ func (app *application) checkout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = app.deliveries.Insert(customerID, vendorID, time.Now(), dropLat, dropLong)
+	deliveryID, err := app.deliveries.Insert(customerID, vendorID, time.Now(), dropLat, dropLong)
 	if err != nil {
 		app.serverError(w, err)
 		return
 	}
-	w.Write([]byte("inserted into database"))
-	// app.render(w, r, "checkout.page.tmpl", nil)
+	for listingID, quantity := range cart {
+		listing, err := app.listings.Get(listingID)
+		if err != nil {
+			app.serverError(w, err)
+		}
+		err = app.orders.Insert(deliveryID, listingID, quantity, listing.Price*quantity)
+		if err != nil {
+			app.serverError(w, err)
+			return
+		}
+	}
+
+	session.AddFlash("Order placed! Track your order status here.")
+	err = session.Save(r, w)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	http.Redirect(w, r, "/customer/activeorders", http.StatusSeeOther)
 }
 
 // Listings ---------------------------------------------------------------------------------------
@@ -571,4 +649,40 @@ func (app *application) listingID(w http.ResponseWriter, r *http.Request) {
 		Listing: listing,
 		Form:    forms.New(nil),
 	})
+}
+
+// Deliveries -------------------------------------------------------------------------------------
+
+// path: "/delivery/{deliveryID}", method: "GET"
+func (app *application) deliveryByID(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	deliveryID, err := strconv.Atoi(vars["deliveryID"])
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+	}
+	orders, err := app.orders.AllFromDeliveryID(deliveryID)
+	if err != nil {
+		app.serverError(w, err)
+	}
+	orderRows, err := app.order2CartRow(orders)
+	if err != nil {
+		app.serverError(w, err)
+	}
+	app.render(w, r, "deliveryid.page.tmpl", &templateData{Orders: orderRows})
+}
+
+// Orders -----------------------------------------------------------------------------------------
+
+// path: "/order/{orderID}", method: "GET"
+func (app *application) orderByID(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	orderID, err := strconv.Atoi(vars["orderID"])
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+	}
+	order, err := app.orders.Get(orderID)
+	if err != nil {
+		app.serverError(w, err)
+	}
+	w.Write([]byte(fmt.Sprintf("%v", order)))
 }

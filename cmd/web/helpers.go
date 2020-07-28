@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"runtime/debug"
 
+	"github.com/iamadarshk/deldrone-server/pkg/models"
+
 	"github.com/justinas/nosurf"
 )
 
@@ -103,4 +105,23 @@ func (app *application) authenticatedCustomer(r *http.Request) int {
 		return 0
 	}
 	return session.Values["customerID"].(int)
+}
+
+func (app *application) order2CartRow(orders []*models.Order) ([]*cartRow, error) {
+	cartRows := make([]*cartRow, 0)
+	for _, order := range orders {
+		listing, err := app.listings.Get(order.ListingID)
+		if err != nil {
+			return nil, err
+		}
+		row := &cartRow{
+			ListingID: order.ListingID,
+			Amount:    order.Amount,
+			Name:      listing.Name,
+			Price:     listing.Price,
+			Quantity:  order.Quant,
+		}
+		cartRows = append(cartRows, row)
+	}
+	return cartRows, nil
 }

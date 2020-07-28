@@ -18,6 +18,10 @@ type templateData struct {
 	Listings              []*models.Listing
 	Vendor                *models.Vendor
 	Vendors               []*models.Vendor
+	Delivery              *models.Delivery
+	Deliveries            []*models.Delivery
+	Order                 *models.Order
+	Orders                []*cartRow
 	Cart                  []cartRow
 	CartTotal             int
 }

@@ -98,13 +98,13 @@ nav {
 }
 
 nav a {
-    margin-right: 1.5em;
+    margin-right: 1.1em;
     display: inline-block;
 }
 
 nav form {
     display: inline-block;
-    margin-left: 1.5em;
+    margin-left: 1.1em;
 }
 
 nav div {
@@ -117,7 +117,7 @@ nav div:last-child {
 }
 
 nav div:last-child a {
-    margin-left: 1.5em;
+    margin-left: 1.1em;
     margin-right: 0;
 }
 

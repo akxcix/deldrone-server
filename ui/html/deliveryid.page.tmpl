@@ -1,0 +1,24 @@
+{{template "base" .}}
+
+{{define "title"}}Delivery{{end}}
+
+{{define "body"}}
+    {{if .Orders}}
+        <table>
+            <tr>
+                <th>Name</th>
+                <th>Price</th>
+                <th>Quantity</th>
+                <th>Amount</th>
+            </tr>
+            {{range .Orders}}
+            <tr>
+                <td>{{.Name}}</td>
+                <td>{{.Price}}</td>
+                <td>{{.Quantity}}</td>
+                <td>{{.Amount}}</td>
+            </tr>
+            {{end}}
+        </table>
+    {{end}}
+{{end}}
