@@ -16,7 +16,7 @@ var (
 	ErrDuplicateEmail = errors.New("models: duplicate email")
 )
 
-// Customer a model used to interface with custtomers table in our database
+// Customer a model used to interface with customers table in our database
 type Customer struct {
 	ID             int
 	Name           string

@@ -35,7 +35,7 @@ func (m *VendorModel) Insert(name, address, email, password, phone string, pinco
 	return err
 }
 
-// Authenticate verifies the credentials and returns userid if valid details are provided.
+// Authenticate verifies the credentials and returns vendorid if valid details are provided.
 func (m *VendorModel) Authenticate(email, password string) (int, error) {
 	var id int
 	var hashedPassword []byte

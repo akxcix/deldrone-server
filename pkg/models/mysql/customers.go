@@ -13,7 +13,7 @@ type CustomerModel struct {
 	DB *sql.DB
 }
 
-// Insert creates a new user by inserting values into the database. Returns an error
+// Insert creates a new customer by inserting values into the database. Returns an error
 func (m *CustomerModel) Insert(name, address, email, password, phone string, pincode int) error {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), 12)
 	if err != nil {
