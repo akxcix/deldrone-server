@@ -18,55 +18,55 @@ var (
 
 // Customer a model used to interface with customers table in our database
 type Customer struct {
-	ID             int
-	Name           string
-	Address        string
-	Pincode        int
-	Phone          string
-	Email          string
-	HashedPassword []byte
+	ID             int    `json:"customerID"`
+	Name           string `json:"name"`
+	Address        string `json:"address"`
+	Pincode        int    `json:"pincode"`
+	Phone          string `json:"phone"`
+	Email          string `json:"email"`
+	HashedPassword []byte `json:"-"`
 }
 
 // Vendor is a model used to interface with the vendors table in our database
 type Vendor struct {
-	ID             int
-	Name           string
-	Pincode        int
-	GpsLat         float64
-	GpsLong        float64
-	Email          string
-	HashedPassword []byte
-	Address        string
-	Phone          int
+	ID             int     `json:"vendorID"`
+	Name           string  `json:"name"`
+	Pincode        int     `json:"pincode"`
+	GpsLat         float64 `json:"latitude"`
+	GpsLong        float64 `json:"longitude"`
+	Email          string  `json:"email"`
+	HashedPassword []byte  `json:"-"`
+	Address        string  `json:"address"`
+	Phone          int     `json:"phone"`
 }
 
 // Listing is a model that interfaces with the listings table in the database
 type Listing struct {
-	ID          int
-	VendorID    int
-	Price       int
-	Description string
-	Name        string
+	ID          int    `json:"listingID"`
+	VendorID    int    `json:"vendorID"`
+	Price       int    `json:"price"`
+	Description string `json:"description"`
+	Name        string `json:"name"`
 }
 
 // Delivery is a model that interfaces with the deliveries table in the database
 type Delivery struct {
-	ID             int
-	CustomerID     int
-	VendorID       int
-	TimeOfDelivery time.Time
-	DropLat        float64
-	DropLong       float64
-	Status         string
+	ID             int       `json:"deliveryID"`
+	CustomerID     int       `json:"customerID"`
+	VendorID       int       `json:"vendorID"`
+	TimeOfDelivery time.Time `json:"timeOfDelivery"`
+	DropLat        float64   `json:"dropLatitude"`
+	DropLong       float64   `json:"dropLongitude"`
+	Status         string    `json:"status"`
 }
 
 // Order is a model that interfaces with the orders table in the database
 type Order struct {
-	ID         int
-	DeliveryID int
-	ListingID  int
-	Quant      int
-	Amount     int
+	ID         int `json:"orderID"`
+	DeliveryID int `json:"deliveryID"`
+	ListingID  int `json:"listingID"`
+	Quant      int `json:"quantity"`
+	Amount     int `json:"amount"`
 }
 
 // Cart is a struct that denotes a user's cart. The Key is the listing's id and value is it's quantity
