@@ -60,6 +60,12 @@ func (app *application) addDefaultData(td *templateData, w http.ResponseWriter, 
 	return td, nil
 }
 
+// Sets Header for JSON and writes bytes to w
+func (app *application) writeJSON(w http.ResponseWriter, r *http.Request, jsonData []byte) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonData)
+}
+
 // renders the web page
 func (app *application) render(w http.ResponseWriter, r *http.Request, name string, td *templateData) {
 	// creates a template set
