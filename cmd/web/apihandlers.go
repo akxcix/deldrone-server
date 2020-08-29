@@ -247,4 +247,73 @@ func (app *application) apiGetListingByID(w http.ResponseWriter, r *http.Request
 
 // Deliveries -------------------------------------------------------------------------------------
 
+// Method: GET, Path: "api/delivery/{deliveryID}"
+func (app *application) apiGetDelivery(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	deliveryID, err := strconv.Atoi(vars["deliveryID"])
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	delivery, err := app.deliveries.Get(deliveryID)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	jsonData, err := json.Marshal(delivery)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	app.writeJSON(w, r, jsonData)
+}
+
+// Method: GET, Path: "api/delivery/{deliveryID}/orders"
+func (app *application) apiGetOrdersFromDelivery(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	deliveryID, err := strconv.Atoi(vars["deliveryID"])
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	orders, err := app.orders.AllFromDeliveryID(deliveryID)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	jsonData, err := json.Marshal(orders)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	app.writeJSON(w, r, jsonData)
+}
+
 // Orders -----------------------------------------------------------------------------------------
+
+// Method: GET, Path: "api/order/{orderID}"
+func (app *application) apiGetOrder(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	orderID, err := strconv.Atoi(vars["orderID"])
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	order, err := app.orders.Get(orderID)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	jsonData, err := json.Marshal(order)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	app.writeJSON(w, r, jsonData)
+}

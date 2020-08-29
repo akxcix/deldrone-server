@@ -66,6 +66,13 @@ func (app *application) routes() http.Handler {
 	// Listing
 	r.Handle("/api/listing/{listingID}", noSurf(http.HandlerFunc(app.apiGetListingByID)))
 
+	// Deliveries
+	r.Handle("/api/delivery/{deliveryID}", noSurf(http.HandlerFunc(app.apiGetDelivery)))
+	r.Handle("/api/delivery/{deliveryID}/orders", noSurf(http.HandlerFunc(app.apiGetOrdersFromDelivery)))
+
+	// Orders
+	r.Handle("/api/order/{orderID}", noSurf(http.HandlerFunc(app.apiGetOrder)))
+
 	// Static files ---------------------------------------------------------------------------------------------------------------------------------
 	fileServer := http.FileServer(http.Dir("./ui/static/"))
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static", fileServer)).Methods("GET")
