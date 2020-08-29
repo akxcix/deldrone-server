@@ -63,6 +63,25 @@ func (app *application) apiGetVendorByPincode(w http.ResponseWriter, r *http.Req
 
 // Method: GET, Path: "/api/vendor/{vendorID}/listings"
 // Fetches all listings by particular vendor using vendorID
+func (app *application) apiGetVendorListings(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	vendorID, err := strconv.Atoi(vars["vendorID"])
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	listings, err := app.listings.All(vendorID)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	jsonData, err := json.Marshal(listings)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	app.writeJSON(w, r, jsonData)
+}
 
 // Method: PUT, Path: "/api/vendor/{vendorID}/listing/{listingID}"
 // Updates particular listing using listingID and vendorID
@@ -73,16 +92,73 @@ func (app *application) apiGetVendorByPincode(w http.ResponseWriter, r *http.Req
 // Method: POST, Path: "/api/vendor/{vendorID}/listing/new"
 // Creates a new listing for vendor with their vendorID
 
-// Method: GET, Path: "/api/vendor/{vendorID}/orders"
-// fetches all orders from vendor with their vendorID
+// Method: GET, Path: "/api/vendor/{vendorID}/deliveries"
+// fetches all deliveries from vendor with their vendorID
+func (app *application) apiGetVendorDeliveries(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	vendorID, err := strconv.Atoi(vars["vendorID"])
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	deliveries, err := app.deliveries.GetAllByVendorID(vendorID)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	jsonData, err := json.Marshal(deliveries)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	app.writeJSON(w, r, jsonData)
+}
 
-// Method: GET, Path: "/api/vendor/{vendorID}/activeorders"
-// fetches activer orders for vendor using their vendorID
+// Method: GET, Path: "/api/vendor/{vendorID}/activedeliveries"
+// fetches active deliveries for vendor using their vendorID
+func (app *application) apiGetVendorActiveDeliveries(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	vendorID, err := strconv.Atoi(vars["vendorID"])
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	deliveries, err := app.deliveries.GetAllByVendorIDStatus(vendorID, "placed")
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	jsonData, err := json.Marshal(deliveries)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	app.writeJSON(w, r, jsonData)
+}
 
 // Customer ---------------------------------------------------------------------------------------
 
 // Method: GET, Path: "api/customer/{customerID}"
 // fetches details for particular customer using their customerID
+func (app *application) apiGetCustomer(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	customerID, err := strconv.Atoi(vars["customerID"])
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	customer, err := app.customers.Get(customerID)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	jsonData, err := json.Marshal(customer)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	app.writeJSON(w, r, jsonData)
+}
 
 // Method: GET, Path: "api/customer/{customerID}/getcart"
 // fetches customer's cart using their customerID
@@ -99,11 +175,49 @@ func (app *application) apiGetVendorByPincode(w http.ResponseWriter, r *http.Req
 // Method: POST, Path: "api/customer/{customerID}/checkout"
 // checks out customer using their customerID
 
-// Method: GET, Path: "api/customer/{customerID}/orders"
-// fetches all orders for customer using their customerID
+// Method: GET, Path: "api/customer/{customerID}/deliveries"
+// fetches all deliveries for customer using their customerID
+func (app *application) apiGetCustomerDeliveries(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	customerID, err := strconv.Atoi(vars["customerID"])
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	deliveries, err := app.deliveries.GetAllByCustomerID(customerID)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	jsonData, err := json.Marshal(deliveries)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	app.writeJSON(w, r, jsonData)
+}
 
-// Method: GET, Path: "api/customer/{customerID}/activeorders"
-// fetches active orders for customer using their customerID
+// Method: GET, Path: "api/customer/{customerID}/activedeliveries"
+// fetches active deliveries for customer using their customerID
+func (app *application) apiGetCustomerActiveDeliveries(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	customerID, err := strconv.Atoi(vars["customerID"])
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	deliveries, err := app.deliveries.GetAllByCustomerIDStatus(customerID, "placed")
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	jsonData, err := json.Marshal(deliveries)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	app.writeJSON(w, r, jsonData)
+}
 
 // Listings ---------------------------------------------------------------------------------------
 

@@ -10,8 +10,11 @@ import (
 // routes defines a router through which we register our handler functions with specific routes
 func (app *application) routes() http.Handler {
 	// TODO: Cleanup middleware
+
 	r := mux.NewRouter()
 	r.NotFoundHandler = http.HandlerFunc(app.default404)
+
+	// Web App --------------------------------------------------------------------------------------------------------------------------------------
 
 	// Account Routes
 	r.Handle("/", noSurf(http.HandlerFunc(app.home))).Methods("GET")
@@ -47,12 +50,23 @@ func (app *application) routes() http.Handler {
 	// Order Routes
 	r.Handle("/order/{orderID}", app.requireAuthenticatedUser(http.HandlerFunc(app.orderByID))).Methods("GET")
 
-	// API ----------------------------------------------------------------------------------------
+	// API ------------------------------------------------------------------------------------------------------------------------------------------
+	// Vendor
 	r.Handle("/api/vendor/{vendorID}", noSurf(http.HandlerFunc(app.apiGetVendorByID)))
 	r.Handle("/api/vendors/{pincode}/{pincoderange}", noSurf(http.HandlerFunc(app.apiGetVendorByPincode)))
+	r.Handle("/api/vendor/{vendorID}/listings", noSurf(http.HandlerFunc(app.apiGetVendorListings)))
+	r.Handle("/api/vendor/{vendorID}/deliveries", noSurf(http.HandlerFunc(app.apiGetVendorDeliveries)))
+	r.Handle("/api/vendor/{vendorID}/activedeliveries", noSurf(http.HandlerFunc(app.apiGetVendorActiveDeliveries)))
+
+	// Customer
+	r.Handle("/api/customer/{customerID}", noSurf(http.HandlerFunc(app.apiGetCustomer)))
+	r.Handle("/api/customer/{customerID}/deliveries", noSurf(http.HandlerFunc(app.apiGetCustomerDeliveries)))
+	r.Handle("/api/customer/{customerID}/activedeliveries", noSurf(http.HandlerFunc(app.apiGetCustomerActiveDeliveries)))
+
+	// Listing
 	r.Handle("/api/listing/{listingID}", noSurf(http.HandlerFunc(app.apiGetListingByID)))
 
-	// Static file server
+	// Static files ---------------------------------------------------------------------------------------------------------------------------------
 	fileServer := http.FileServer(http.Dir("./ui/static/"))
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static", fileServer)).Methods("GET")
 
