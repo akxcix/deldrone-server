@@ -1,0 +1,17 @@
+version: '3'
+services: 
+    server:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        environment:
+            - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+            - AUTHENTICATION_KEY=${AUTHENTICATION_KEY}
+            - DSN=${DSN}
+            - ADDR=${ADDR}
+            - TLS=${TLS}
+        ports: 
+            - "8080:${ADDR}"
+        volumes: 
+            - ./TLS:/build/TLS
+        network_mode: "host"
