@@ -4,10 +4,13 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/iamadarshk/deldrone-server/pkg/models"
 )
 
 // Vendor -----------------------------------------------------------------------------------------
@@ -162,18 +165,163 @@ func (app *application) apiGetCustomer(w http.ResponseWriter, r *http.Request) {
 
 // Method: GET, Path: "api/customer/{customerID}/getcart"
 // fetches customer's cart using their customerID
+func (app *application) apiGetCustomerCart(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	customerID, err := strconv.Atoi(vars["customerID"])
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	cart := app.carts[customerID]
+	jsonData, err := json.Marshal(cart)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	app.writeJSON(w, r, jsonData)
+}
 
 // Method: POST, Path: "api/customer/{customerID}/cart/{listingID}"
 // adds listing with listingID in customer's cart using their customerID
+func (app *application) apiCustomerAddToCart(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	customerID, err := strconv.Atoi(vars["customerID"])
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	listingID, err := strconv.Atoi(vars["listingID"])
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	var quant int
+	err = json.NewDecoder(r.Body).Decode(&quant)
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	if quant <= 0 || listingID <= 0 {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	cart := app.carts[customerID]
+	if cart == nil {
+		cart = make(models.Cart)
+		app.carts[customerID] = cart
+	}
+	cart.Add(listingID, quant)
+	url := fmt.Sprintf("/api/customer/%d/cart", customerID)
+	http.Redirect(w, r, url, http.StatusSeeOther)
+}
 
 // Method: PUT, Path: "api/customer/{customerID}/cart/{listingID}"
 // updates listing with listingID in customer's cart using their customerID
+func (app *application) apiCustomerUpdateCart(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	customerID, err := strconv.Atoi(vars["customerID"])
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	listingID, err := strconv.Atoi(vars["listingID"])
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	var quant int
+	err = json.NewDecoder(r.Body).Decode(&quant)
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	if quant <= 0 || listingID <= 0 {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	cart := app.carts[customerID]
+	if cart == nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	cart.Add(listingID, quant)
+	url := fmt.Sprintf("/api/customer/%d/cart", customerID)
+	http.Redirect(w, r, url, http.StatusSeeOther)
+}
 
 // Method: DELETE, Path: "api/customer/{customerID}/cart/{listingID}"
 // deletes listing with listingID in customer's cart using their customerID
+func (app *application) apiCustomerDeleteFromCart(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	customerID, err := strconv.Atoi(vars["customerID"])
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	listingID, err := strconv.Atoi(vars["listingID"])
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	cart := app.carts[customerID]
+	delete(cart, listingID)
+	url := fmt.Sprintf("/api/customer/%d/cart", customerID)
+	http.Redirect(w, r, url, http.StatusSeeOther)
+}
 
 // Method: POST, Path: "api/customer/{customerID}/checkout"
 // checks out customer using their customerID
+func (app *application) apiCheckout(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	customerID, err := strconv.Atoi(vars["customerID"])
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	cart := app.carts[customerID]
+	var vendorID int
+	for listingID := range cart {
+		listing, err := app.listings.Get(listingID)
+		if err != nil {
+			app.serverError(w, err)
+			return
+		}
+		if vendorID == 0 {
+			vendorID = listing.VendorID
+		} else if vendorID != listing.VendorID {
+			app.clientError(w, http.StatusConflict)
+			return
+		}
+	}
+	t := struct {
+		DropLat  float64 `json:"dropLatitude"`
+		DropLong float64 `json:"dropLongitude"`
+	}{}
+	err = json.NewDecoder(r.Body).Decode(&t)
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	deliveryID, err := app.deliveries.Insert(customerID, vendorID, time.Now(), t.DropLat, t.DropLong)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	for listingID, quant := range cart {
+		listing, err := app.listings.Get(listingID)
+		if err != nil {
+			app.serverError(w, err)
+			return
+		}
+		err = app.orders.Insert(deliveryID, listingID, quant, listing.Price*quant)
+		if err != nil {
+			app.serverError(w, err)
+			return
+		}
+	}
+	url := fmt.Sprintf("/api/customer/%d/activeorders", customerID)
+	http.Redirect(w, r, url, http.StatusSeeOther)
+}
 
 // Method: GET, Path: "api/customer/{customerID}/deliveries"
 // fetches all deliveries for customer using their customerID
@@ -248,6 +396,7 @@ func (app *application) apiGetListingByID(w http.ResponseWriter, r *http.Request
 // Deliveries -------------------------------------------------------------------------------------
 
 // Method: GET, Path: "api/delivery/{deliveryID}"
+// fetch details of a delivery using deliveryID (NOT LIST OF ITEMS ASSOCIATED WITH THE DELIVERYID)
 func (app *application) apiGetDelivery(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	deliveryID, err := strconv.Atoi(vars["deliveryID"])
@@ -271,6 +420,7 @@ func (app *application) apiGetDelivery(w http.ResponseWriter, r *http.Request) {
 }
 
 // Method: GET, Path: "api/delivery/{deliveryID}/orders"
+// fetches all orders associated with a deliveryID
 func (app *application) apiGetOrdersFromDelivery(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	deliveryID, err := strconv.Atoi(vars["deliveryID"])
@@ -296,6 +446,7 @@ func (app *application) apiGetOrdersFromDelivery(w http.ResponseWriter, r *http.
 // Orders -----------------------------------------------------------------------------------------
 
 // Method: GET, Path: "api/order/{orderID}"
+// fetches an order using orderID
 func (app *application) apiGetOrder(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	orderID, err := strconv.Atoi(vars["orderID"])

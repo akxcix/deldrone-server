@@ -52,26 +52,30 @@ func (app *application) routes() http.Handler {
 
 	// API ------------------------------------------------------------------------------------------------------------------------------------------
 	// Vendor
-	r.Handle("/api/vendor/{vendorID}", noSurf(http.HandlerFunc(app.apiGetVendorByID)))
-	r.Handle("/api/vendors/{pincode}/{pincoderange}", noSurf(http.HandlerFunc(app.apiGetVendorByPincode)))
-	r.Handle("/api/vendor/{vendorID}/listings", noSurf(http.HandlerFunc(app.apiGetVendorListings)))
-	r.Handle("/api/vendor/{vendorID}/deliveries", noSurf(http.HandlerFunc(app.apiGetVendorDeliveries)))
-	r.Handle("/api/vendor/{vendorID}/activedeliveries", noSurf(http.HandlerFunc(app.apiGetVendorActiveDeliveries)))
+	r.Handle("/api/vendor/{vendorID}", noSurf(http.HandlerFunc(app.apiGetVendorByID))).Methods("GET")
+	r.Handle("/api/vendors/{pincode}/{pincoderange}", noSurf(http.HandlerFunc(app.apiGetVendorByPincode))).Methods("GET")
+	r.Handle("/api/vendor/{vendorID}/listings", noSurf(http.HandlerFunc(app.apiGetVendorListings))).Methods("GET")
+	r.Handle("/api/vendor/{vendorID}/deliveries", noSurf(http.HandlerFunc(app.apiGetVendorDeliveries))).Methods("GET")
+	r.Handle("/api/vendor/{vendorID}/activedeliveries", noSurf(http.HandlerFunc(app.apiGetVendorActiveDeliveries))).Methods("GET")
 
 	// Customer
-	r.Handle("/api/customer/{customerID}", noSurf(http.HandlerFunc(app.apiGetCustomer)))
-	r.Handle("/api/customer/{customerID}/deliveries", noSurf(http.HandlerFunc(app.apiGetCustomerDeliveries)))
-	r.Handle("/api/customer/{customerID}/activedeliveries", noSurf(http.HandlerFunc(app.apiGetCustomerActiveDeliveries)))
+	r.Handle("/api/customer/{customerID}", noSurf(http.HandlerFunc(app.apiGetCustomer))).Methods("GET")
+	r.Handle("/api/customer/{customerID}/deliveries", noSurf(http.HandlerFunc(app.apiGetCustomerDeliveries))).Methods("GET")
+	r.Handle("/api/customer/{customerID}/activedeliveries", noSurf(http.HandlerFunc(app.apiGetCustomerActiveDeliveries))).Methods("GET")
+	r.Handle("/api/customer/{customerID}/cart", noSurf(http.HandlerFunc(app.apiGetCustomerCart))).Methods("GET")
+	r.Handle("/api/customer/{customerID}/cart/{listingID}", http.HandlerFunc(app.apiCustomerAddToCart)).Methods("POST")
+	r.Handle("/api/customer/{customerID}/cart/{listingID}", http.HandlerFunc(app.apiCustomerUpdateCart)).Methods("PUT")
+	r.Handle("/api/customer/{customerID}/cart/{listingID}", http.HandlerFunc(app.apiCustomerDeleteFromCart)).Methods("DELETE")
 
 	// Listing
-	r.Handle("/api/listing/{listingID}", noSurf(http.HandlerFunc(app.apiGetListingByID)))
+	r.Handle("/api/listing/{listingID}", noSurf(http.HandlerFunc(app.apiGetListingByID))).Methods("GET")
 
 	// Deliveries
-	r.Handle("/api/delivery/{deliveryID}", noSurf(http.HandlerFunc(app.apiGetDelivery)))
-	r.Handle("/api/delivery/{deliveryID}/orders", noSurf(http.HandlerFunc(app.apiGetOrdersFromDelivery)))
+	r.Handle("/api/delivery/{deliveryID}", noSurf(http.HandlerFunc(app.apiGetDelivery))).Methods("GET")
+	r.Handle("/api/delivery/{deliveryID}/orders", noSurf(http.HandlerFunc(app.apiGetOrdersFromDelivery))).Methods("GET")
 
 	// Orders
-	r.Handle("/api/order/{orderID}", noSurf(http.HandlerFunc(app.apiGetOrder)))
+	r.Handle("/api/order/{orderID}", noSurf(http.HandlerFunc(app.apiGetOrder))).Methods("GET")
 
 	// Static files ---------------------------------------------------------------------------------------------------------------------------------
 	fileServer := http.FileServer(http.Dir("./ui/static/"))
