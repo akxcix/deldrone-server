@@ -16,7 +16,7 @@ RUN go build -o main cmd/web/*
 
 
 ENV DSN "web:pass@/deldrone?parseTime=true"
-ENV ADDR "443"
+ENV ADDR 443
 ENV TLS false
 ENV AUTHENTICATION_KEY "super-secret-key"
 ENV ENCRYPTION_KEY "super-secret-key"

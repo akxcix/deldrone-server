@@ -11,7 +11,7 @@ services:
             - ADDR=${ADDR}
             - TLS=${TLS}
         ports: 
-            - "8080:${ADDR}"
+            - "${ADDR}:${ADDR}"
         volumes: 
-            - ./TLS:/build/TLS
+            - ./tls:/build/tls
         network_mode: "host"
