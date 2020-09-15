@@ -13,5 +13,5 @@ services:
         ports: 
             - "${ADDR}:${ADDR}"
         volumes: 
-            - ./tls:/build/tls
+            - ~/tls:/build/tls
         network_mode: "host"
