@@ -10,32 +10,32 @@ func TestPQueue(t *testing.T) {
 	pq := make(PQueue, 0)
 	items := []Item{
 		Item{
-			value:    "A",
-			priority: 1,
+			Value:    "A",
+			Priority: 1,
 		},
 		Item{
-			value:    1,
-			priority: 2,
+			Value:    1,
+			Priority: 2,
 		},
 		Item{
-			value:    "B",
-			priority: 3,
+			Value:    "B",
+			Priority: 3,
 		},
 		Item{
-			value:    "C",
-			priority: 3,
+			Value:    "C",
+			Priority: 3,
 		},
 		Item{
-			value:    "D",
-			priority: 4,
+			Value:    "D",
+			Priority: 4,
 		},
 		Item{
-			value:    "E",
-			priority: 5,
+			Value:    "E",
+			Priority: 5,
 		},
 		Item{
-			value:    "F",
-			priority: 0,
+			Value:    "F",
+			Priority: 0,
 		},
 	}
 
@@ -45,7 +45,7 @@ func TestPQueue(t *testing.T) {
 		t.Log(pq)
 	}
 
-	for len(pq) > 0 {
+	for !pq.IsEmpty() {
 		t.Log(heap.Pop(&pq))
 	}
 
